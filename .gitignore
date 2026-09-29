@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Environment overrides (may carry deployer keys or RPC credentials)
+.env
+.env.local
+.env.*.local
+
+# GenVM test harness output, regenerated on every run
+artifacts/
+
+# Node / frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+# macOS Finder metadata
+.DS_Store

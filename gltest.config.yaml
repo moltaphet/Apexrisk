@@ -1,0 +1,38 @@
+# Network selection for the gltest integration suite (tests/integration/).
+#
+# The default is `localnet` -- the in-process GenLayer simulator started with
+# `genlayer up`. That is the network the integration suite is written against:
+# it needs no funding and no external endpoint, so a reviewer can run the full
+# consensus path on their own machine.
+#
+# `studio_devnet` is the preconfigured name for GenLayer Studio Next (chain
+# 61997), which is where the recorded deployment in deployments/studio-dev.json
+# lives. Its URL is pinned to studio-next.genlayer.com (the hackathon brief's
+# hostname) rather than the genlayer-py bundled studio-dev.genlayer.com; both
+# hostnames serve chain 61997 and answer identically. Run against it with:
+#
+#   gltest tests/integration -v -s --network studio_devnet
+#
+# The direct suite (tests/direct/) runs entirely in memory and never reads this
+# file's network -- only tests/integration/ dials out.
+networks:
+  default: localnet
+
+  localnet:
+    url: "http://127.0.0.1:4000/api"
+    # The localnet consensus worker can stall once per process lifetime for up
+    # to 300s (aiohttp's default total timeout) after the first transaction
+    # that supplies per-transaction validators. 200 x 3s = 600s clears that
+    # twice over while still surfacing a genuinely stuck network. Set only on
+    # localnet; studio_devnet has neither the stall nor an appetite for
+    # 10-minute waits.
+    default_wait_interval: 3000
+    default_wait_retries: 200
+
+  studio_devnet:
+    url: "https://studio-next.genlayer.com/api"
+
+paths:
+  contracts: "contracts"
+
+environment: .env

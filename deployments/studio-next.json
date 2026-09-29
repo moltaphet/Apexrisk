@@ -1,0 +1,13 @@
+{
+  "network": "studio-next",
+  "chain_id": 61997,
+  "rpc_url": "https://studio-next.genlayer.com/api",
+  "explorer_url": "https://explorer-studio-next.genlayer.com",
+  "contract": "ApexRisk",
+  "contract_address": "0x0000000000000000000000000000000000000000",
+  "status": "NOT_DEPLOYED",
+  "note": "Placeholder. Run `DEPLOYER_PRIVATE_KEY=0x... .venv/bin/python scripts/deploy.py`; it overwrites this file with the real address, tx hash and explorer links and pins the address in frontend/src/config.ts.",
+  "address_format": "0x + 40 hex chars",
+  "explorer_contract_url_template": "https://explorer-studio-next.genlayer.com/address/{address}",
+  "explorer_tx_url_template": "https://explorer-studio-next.genlayer.com/tx/{hash}"
+}

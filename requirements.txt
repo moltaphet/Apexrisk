@@ -1,0 +1,27 @@
+# Python toolchain for the ApexRisk contract test suite.
+#
+# Python 3.12 is required: the v0.3 GenVM runner's calldata format is not
+# decodable by the 0.29.x-era harness, so genlayer-test is pinned to the
+# 0.30.0rc2 pre-release.
+#
+#   uv venv --python 3.12
+#   uv pip install --prerelease=allow -r requirements.txt
+#   .venv/bin/python -m pytest tests/direct/ -q
+#
+# The same pins are proven working against the v0.3 API surface this contract
+# is written against; no stable release provides that surface yet.
+
+# GenVM tooling.
+genlayer-test==0.30.0rc2
+genlayer-py==0.19.0rc2
+
+# The contract analyser. `genvm-lint check` runs the lint + SDK validation gate.
+genvm-linter==0.11.1rc2
+
+# Test runner.
+pytest==9.1.1
+
+# Chain client transitively required by genlayer-py. Pinned because
+# genlayer-py 0.19.0rc2 predates several breaking web3 8.x point releases.
+web3==8.0.0
+eth-account==0.14.0
