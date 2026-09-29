@@ -115,7 +115,7 @@ export function RiskTerminal({ markets, loading, error, simulated, selected, onS
           <p className="mt-2">
             The contract is deployed and answering, but the governor has not run <code className="text-apex">register_market</code> for any asset.
             Seed ETH, BTC and SOL with <code className="text-apex">scripts/interact_live.py --seed</code>, or switch to{" "}
-            <span className="text-warn">Studio Guest</span> in the navbar to walk the full consensus flow on a simulated snapshot.
+            <span className="text-warn">Guest</span> mode in the navbar to walk the full consensus flow on a simulated snapshot.
           </p>
         </div>
       )}
