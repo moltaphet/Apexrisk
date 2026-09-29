@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { ChevronDown, ExternalLink, LogOut, Menu, ShieldCheck, Wallet, X } from "lucide-react";
 import { APP_VERSION, CHAIN_ID, CHAIN_NAME, CONTRACT_ADDRESS, IS_DEPLOYED, explorerAddressUrl, EXPLORER_URL } from "../config";
 
@@ -12,7 +12,7 @@ interface Props {
   account: string | null;
   walletAvailable: boolean;
   onToggleGuest: (guest: boolean) => void;
-  onConnect: () => void;
+  onConnect: (e: ReactMouseEvent<HTMLButtonElement>) => void;
   onDisconnect: () => void;
   onAbout: () => void;
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { connectWallet, fetchMarkets, hasWallet, runEvaluation } from "./chain";
 import { ConsensusRunner } from "./components/ConsensusRunner";
 import { RiskTerminal } from "./components/RiskTerminal";
@@ -74,10 +74,11 @@ export default function App() {
     }
   };
 
-  const connect = async () => {
+  // Wired only to the Connect Wallet button; `isTrusted` is false for scripted clicks.
+  const connect = async (e: MouseEvent<HTMLButtonElement>) => {
     setWalletError(null);
     try {
-      setAccount(await connectWallet());
+      setAccount(await connectWallet(e.nativeEvent.isTrusted));
     } catch (e) {
       setWalletError(e instanceof Error ? e.message : String(e));
     }

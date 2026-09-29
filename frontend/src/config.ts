@@ -11,6 +11,18 @@ export const CHAIN_NAME = "GenLayer Studio Next";
 export const RPC_URL = "https://studio-next.genlayer.com/api";
 export const EXPLORER_URL = "https://explorer-studio-next.genlayer.com";
 
+/**
+ * EIP-3085 (`wallet_addEthereumChain`) parameters for Studio Next, in the exact
+ * standard shape wallets and their security providers expect. 0xF22D === 61997.
+ */
+export const WALLET_CHAIN_PARAMS = {
+  chainId: "0xF22D",
+  chainName: "GenLayer Studio Next",
+  nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
+  rpcUrls: ["https://studio-next.genlayer.com/api"],
+  blockExplorerUrls: ["https://explorer-studio-next.genlayer.com"],
+} as const;
+
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // Studio Next deployment. `scripts/deploy.py` rewrites this line after a deploy.

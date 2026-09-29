@@ -7,6 +7,7 @@ import {
   EVAL_COOLDOWN_SECS,
   EXPLORER_URL,
   RPC_URL,
+  WALLET_CHAIN_PARAMS,
 } from "./config";
 import type { HistoryRecord, Market, Posture, RunState } from "./types";
 
@@ -53,26 +54,50 @@ interface Eip1193 {
 const provider = (): Eip1193 | undefined => (window as unknown as { ethereum?: Eip1193 }).ethereum;
 export const hasWallet = () => !!provider();
 
-export async function connectWallet(): Promise<string> {
+const USER_REJECTED = 4001; // EIP-1193: the user dismissed the prompt
+const UNRECOGNIZED_CHAIN = 4902; // EIP-3326: the wallet does not know this chain
+
+/** Wallets report the JSON-RPC error code at the top level or nested under `data`. */
+function errorCode(err: unknown): number | undefined {
+  const e = err as { code?: unknown; data?: { originalError?: { code?: unknown } } } | null;
+  const code = e?.code ?? e?.data?.originalError?.code;
+  return typeof code === "number" ? code : undefined;
+}
+
+/**
+ * Connect an injected wallet. Wallet security providers (e.g. Blockaid) flag
+ * sites that prompt without being asked, so this is deliberately conservative:
+ *
+ *  - It is called ONLY from the Connect button's click handler, never on mount,
+ *    and refuses to run unless that click was a real user gesture.
+ *  - `eth_requestAccounts` is the first and only account prompt.
+ *  - The chain is switched only if the wallet is not already on Studio Next.
+ *  - `wallet_addEthereumChain` (standard EIP-3085 params) is requested only when
+ *    the wallet says it does not know the chain (4902). If the user dismisses
+ *    the switch prompt we stop; we never follow a "no" with another prompt.
+ */
+export async function connectWallet(trustedClick: boolean): Promise<string> {
+  if (!trustedClick) throw new Error("Wallet connection must be started by a click on Connect Wallet.");
   const eth = provider();
   if (!eth) throw new Error("No injected wallet found. Install MetaMask, or use Guest mode.");
+
   const [account] = (await eth.request({ method: "eth_requestAccounts" })) as string[];
-  const chainIdHex = "0x" + CHAIN_ID.toString(16);
-  try {
-    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: chainIdHex }] });
-  } catch {
-    await eth.request({
-      method: "wallet_addEthereumChain",
-      params: [
-        {
-          chainId: chainIdHex,
-          chainName: CHAIN_NAME,
-          nativeCurrency: { name: "GEN Token", symbol: "GEN", decimals: 18 },
-          rpcUrls: [RPC_URL],
-          blockExplorerUrls: [EXPLORER_URL],
-        },
-      ],
-    });
+
+  const current = (await eth.request({ method: "eth_chainId" })) as string;
+  if (current.toLowerCase() !== WALLET_CHAIN_PARAMS.chainId.toLowerCase()) {
+    try {
+      await eth.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: WALLET_CHAIN_PARAMS.chainId }],
+      });
+    } catch (err) {
+      const code = errorCode(err);
+      if (code === USER_REJECTED) {
+        throw new Error(`Network switch declined. Switch your wallet to ${WALLET_CHAIN_PARAMS.chainName} to submit transactions.`);
+      }
+      if (code !== UNRECOGNIZED_CHAIN) throw err;
+      await eth.request({ method: "wallet_addEthereumChain", params: [WALLET_CHAIN_PARAMS] });
+    }
   }
   return account;
 }
