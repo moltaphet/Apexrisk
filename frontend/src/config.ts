@@ -40,8 +40,6 @@ function resolveAddress(): string {
 export const CONTRACT_ADDRESS = resolveAddress();
 export const IS_DEPLOYED = CONTRACT_ADDRESS !== ZERO_ADDRESS;
 
-export const SYMBOLS = ["ETH", "BTC", "SOL"] as const;
-
 export const explorerAddressUrl = (a: string) => `${EXPLORER_URL}/address/${a}`;
 export const explorerTxUrl = (h: string) => `${EXPLORER_URL}/tx/${h}`;
 
@@ -49,7 +47,7 @@ export const DOCS_URL = "https://docs.genlayer.com";
 // Set to the public repository URL once published; the footer shows a disabled label while empty.
 export const GITHUB_URL = "";
 export const APP_VERSION = "v1.0-alpha";
-export const TESTS_PASSING = 189;
+export const TESTS_PASSING = 234;
 
 // Mirrors of the contract's velocity limits (contracts/apex_risk.py).
 export const EVAL_COOLDOWN_SECS = 1800;

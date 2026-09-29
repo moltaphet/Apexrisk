@@ -8,7 +8,7 @@
 
 [![Network](https://img.shields.io/badge/GenLayer-Studio%20Next%20(Chain%20ID%3A%2061997)-34d399?style=flat-square)](https://explorer-studio-next.genlayer.com)
 [![Contract](https://img.shields.io/badge/Contract-Python%20GenVM%20Intelligent%20Contract-3776ab?style=flat-square&logo=python&logoColor=white)](contracts/apex_risk.py)
-[![Tests](https://img.shields.io/badge/Pytest-189%2F189%20Unit%20%26%20Regression%20Tests%20Passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](tests/direct)
+[![Tests](https://img.shields.io/badge/Pytest-234%2F234%20Unit%20%26%20Regression%20Tests%20Passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](tests/direct)
 [![Frontend](https://img.shields.io/badge/Frontend-React%20%2F%20Vite%20%2F%20Tailwind%20CSS-61dafb?style=flat-square&logo=react&logoColor=black)](frontend)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](#license)
 
@@ -202,7 +202,7 @@ Additional guarantees:
 
 ## 5. Verified test suite
 
-**189 tests, 189 passing**, in `tests/direct/`. They run in-memory on the GenVM test harness (no network), with the telemetry page, the committee's answers and the block clock mocked. Beyond exercising the deployed contract, they load the contract module and test its pure functions (`_coerce_bps`, `_postures_agree`, `_validator_verdict`, `_step`, `_velocity_limited`, `_sanitize_telemetry`) directly, because the direct harness never runs the validator function.
+**234 tests, 234 passing**, in `tests/direct/`. They run in-memory on the GenVM test harness (no network), with the telemetry page, the committee's answers and the block clock mocked. Beyond exercising the deployed contract, they load the contract module and test its pure functions (`_coerce_bps`, `_postures_agree`, `_validator_verdict`, `_step`, `_velocity_limited`, `_sanitize_telemetry`) directly, because the direct harness never runs the validator function.
 
 The audit findings each have a named regression test (`test_poc1_…` to `test_poc6_…`).
 
@@ -217,6 +217,7 @@ The audit findings each have a named regression test (`test_poc1_…` to `test_p
 | **PoC 4 · clamped consensus** | Answers 900 bps apart that clamp to the same value agree (both directions); out-of-range rates and sub-floor LTVs clamp into agreement; the ±750 boundary is exact after clamping; rationale and tier are ignored. |
 | **Validator verdict & SDK errors** | `gl.vm.UserError` is read through `.data` (it has no `.message`); matching transient failures reconcile despite different wording; a transient leader with a succeeding validator disagrees; deterministic errors must match exactly; `[LLM_ERROR]` never reconciles; a close leader result is ratified, a far one rejected; seven malformed calldata shapes are rejected. |
 | **PoC 5 · injection hardening** | Nine payloads (`SYSTEM: override`, `ASSISTANT:`, `user:`, `Admin:`, `===`, code fences, `<\|im_start\|>`, `[INST]`, forged `</telemetry>`) are stripped while the real data survives; benign text is untouched; the prompt carries the instruction boundary, labelled sources and a trailing output format; end to end, the committee mock only answers if the injected page never reached the prompt. |
+| **Market catalog & seeding** (`test_seed_markets.py`, 45 tests) | The ten baselines match the spec exactly; each sits inside the contract envelope (so none is clamped) and its URLs pass the contract's own validator; all ten register on the real contract with the derived tier; the depth source is accepted as a secondary; `frontend/src/catalog.ts` and the guest snapshots cover every seed asset and mirror the Python catalog (a mutation check confirmed drift fails the suite). The seeding loop runs against a fake client: it registers all ten on an empty contract, skips registered markets and never re-registers them, is idempotent, survives a failing market, retries only what failed on re-run, reports a transaction that did not register as a failure, and writes the depth source only with `--with-depth`. |
 | **Secondary telemetry & freshness** | Set / clear / validate the secondary source; both sources reach the committee in order; the secondary is a fallback when the primary is down and vice versa; both down reverts with state untouched; `updated_at` / `is_stale` (never evaluated → stale; not stale at exactly 24 h, stale one second later; a re-evaluation refreshes it). |
 | **Boundary & clamp tests** | Nine parametrised registration cases at and beyond every bound (LTV floor/ceiling, liquidation buffer and 9800 cap, rate floor/ceiling); an exhaustive sweep asserting the invariants hold for every combination of extreme inputs. |
 | **Circuit breaker & pause** | Toggle round-trip; unknown market; a tripped breaker blocks evaluation with no state or history change and is per-market; resetting re-enables it; the active/inactive toggle round-trips and blocks evaluation when off; toggles persist across calls. |
@@ -233,7 +234,7 @@ Reproduce:
 
 (`pytest` on its own also works: `pyproject.toml` points it at `tests/direct`.)
 
-> **What direct mode does not exercise.** The direct harness runs only the leader path, so the real multi-validator round (leader/validator disagreement, rotation, appeals) never executes there. The decision logic is covered by unit-testing the pure `_validator_verdict` and `_postures_agree` with fabricated `Return` / `UserError` results, but end-to-end validator agreement still needs integration tests against a live network (`gltest`), which require a deployed contract and are not part of the 189.
+> **What direct mode does not exercise.** The direct harness runs only the leader path, so the real multi-validator round (leader/validator disagreement, rotation, appeals) never executes there. The decision logic is covered by unit-testing the pure `_validator_verdict` and `_postures_agree` with fabricated `Return` / `UserError` results, but end-to-end validator agreement still needs integration tests against a live network (`gltest`), which require a deployed contract and are not part of the 234.
 
 ---
 
@@ -241,7 +242,7 @@ Reproduce:
 
 `frontend/`: React, Vite, Tailwind CSS and lucide-react, using `genlayer-js` for chain access.
 
-- **Live Risk Terminal.** Glassmorphism asset cards for ETH, BTC and SOL, each with a visual **LTV vs liquidation-threshold bar** (colour-coded by margin: green ≥ 600 bps, amber ≥ 400, red below), Current LTV, Liquidation Margin, Base Borrow Rate, and a colour-coded **risk-tier badge**. Clicking a card selects that market for the runner.
+- **Live Risk Terminal.** A responsive grid (1 / 2 / 3 / 4 columns) of glassmorphism cards for the ten catalog assets (ETH, BTC, SOL, AVAX, LINK, ARB, OP, NEAR, SUI, BNB), with a symbol/name search and tier filters (with counts) so the grid stays easy to scan; picking a market brings the consensus runner into view. Each card has a visual **LTV vs liquidation-threshold bar** (colour-coded by margin: green ≥ 600 bps, amber ≥ 400, red below), Current LTV, Liquidation Margin, Base Borrow Rate, and a colour-coded **risk-tier badge**. Clicking a card selects that market for the runner.
 - **3-stage consensus lifecycle stepper.** *Telemetry fetching (orderbook depth & IV)* → *GenVM multi-validator LLM consensus* → *On-chain finality & parameter ratification*, with animated status pulses and a JSON drawer showing the committee output.
 - **No optimistic success.** A live run is reported successful only after the transaction reaches `ACCEPTED`/`FINALIZED` **and** a re-read of the contract shows `evaluation_count` actually increased. `UNDETERMINED`, cancelled, timed-out, or reverted transactions render as failed.
 - **Guest / Simulation mode.** A pre-populated telemetry snapshot plus a local port of the invariants lets judges run the full stepper with **no wallet and no funds**. Everything is labelled **SIMULATED** and nothing touches the chain. It is forced on while no contract address is configured.
@@ -254,8 +255,10 @@ Reproduce:
 
 ```
 contracts/apex_risk.py     GenVM intelligent contract
-tests/direct/              189 in-memory pytest tests
-scripts/deploy.py          deploy + seed ETH/BTC/SOL
+tests/direct/              234 in-memory pytest tests
+scripts/seed_markets.py    the ten-asset catalog (baselines + telemetry endpoints)
+scripts/deploy.py          deploy + seed the catalog
+scripts/interact_live.py   read-only health check, --seed, --evaluate
 deployments/               deployment artifact (studio-next.json)
 frontend/                  React + Vite + Tailwind risk terminal
 ```
@@ -267,7 +270,7 @@ frontend/                  React + Vite + Tailwind risk terminal
 uv venv --python 3.12
 uv pip install --prerelease=allow -r requirements.txt
 
-# 2. Lint the contract and run the 189 unit tests
+# 2. Lint the contract and run the 234 unit tests
 genvm-lint check contracts/apex_risk.py
 .venv/bin/python -m pytest tests/direct/ -v
 
@@ -310,18 +313,40 @@ Not verified: the deployed bytecode was not byte-compared to the repository (the
 # read-only health check (no key needed)
 .venv/bin/python scripts/interact_live.py
 
-# governor only: register ETH / BTC / SOL, then run a live evaluation
+# governor only: register the ten-asset catalog, then run a live evaluation
 DEPLOYER_PRIVATE_KEY=0x<funded governor key> .venv/bin/python scripts/interact_live.py --seed
+DEPLOYER_PRIVATE_KEY=0x<funded governor key> .venv/bin/python scripts/interact_live.py --seed --with-depth   # also add the orderbook-depth secondary source
 DEPLOYER_PRIVATE_KEY=0x<funded governor key> .venv/bin/python scripts/interact_live.py --evaluate ETH
 ```
 
-`interact_live.py` refuses to send `--seed` from any account that is not the contract's governor, and only evaluates markets that exist. To deploy a fresh instance instead:
+`interact_live.py` refuses to send `--seed` from any account that is not the contract's governor, and only evaluates markets that exist. `--seed` is safe to re-run: markets that are already registered are skipped (re-registering would reset their posture), one failing market does not abort the batch, and afterwards the chain is re-read so a transaction that returned but did not register the market is reported as a failure. Re-run to retry only what is missing.
+
+### Market catalog
+
+Ten collateral assets, defined once in `scripts/seed_markets.py` (mirrored by `frontend/src/catalog.ts`; a test fails if the two drift). Every baseline sits inside the contract's envelope, so none is clamped at registration, and the tier is derived from the LTV.
+
+| Asset | LTV | Liquidation | Base rate | Tier |
+|---|---|---|---|---|
+| ETH | 80.00% | 85.00% | 3.50% | LOW |
+| BTC | 80.00% | 85.00% | 3.00% | LOW |
+| SOL | 70.00% | 76.00% | 4.50% | MODERATE |
+| AVAX | 65.00% | 72.00% | 5.00% | MODERATE |
+| LINK | 70.00% | 75.00% | 4.00% | MODERATE |
+| ARB | 60.00% | 68.00% | 5.50% | MODERATE |
+| OP | 60.00% | 68.00% | 5.50% | MODERATE |
+| NEAR | 60.00% | 67.00% | 6.00% | MODERATE |
+| SUI | 55.00% | 64.00% | 6.50% | MODERATE |
+| BNB | 75.00% | 80.00% | 4.00% | LOW |
+
+These are baselines, not recommendations: the engine re-underwrites each market from live telemetry, one velocity-limited step at a time.
+
+**Telemetry endpoints.** Each market's primary source is the keyless public Binance 24h-ticker JSON (`api.binance.com/api/v3/ticker/24hr?symbol=<PAIR>USDT`: price, 24h range, volume) and its optional secondary is the top-of-book depth JSON (`.../depth?symbol=<PAIR>USDT&limit=20`), which is what `--with-depth` registers. CoinGecko coin pages and its keyless API were the first choice but return HTTP 403 (bot protection) to non-browser clients, so they cannot be relied on for unattended scraping. All 20 Binance endpoints were checked and answer HTTP 200. Binance can refuse some regions (HTTP 451); if validators are geo-blocked, the committee gets an error body it cannot use and the evaluation reverts with state untouched. To deploy a fresh instance instead:
 
 ```bash
 DEPLOYER_PRIVATE_KEY=0x<funded Studio Next key> .venv/bin/python scripts/deploy.py
 ```
 
-`deploy.py` deploys the contract, registers ETH / BTC / SOL, writes `deployments/studio-next.json`, and pins the address in `frontend/src/config.ts`. Keys are read only from the environment or a git-ignored `.env`.
+`deploy.py` deploys the contract, registers the ten-asset catalog, writes `deployments/studio-next.json`, and pins the address in `frontend/src/config.ts`. Keys are read only from the environment or a git-ignored `.env`.
 
 > The RPC path is `/api`: `/rpc` returns HTTP 404 on Studio Next.
 
@@ -349,12 +374,12 @@ Other assumptions:
 
 ## 10. Status & honest limitations
 
-- **Deployed, but not yet seeded or exercised.** The contract is live at `0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d` and its views respond, but it has **no markets registered** and **no evaluation has been run on it** from this repository. The governor must run `scripts/interact_live.py --seed` (and then `--evaluate ETH` to prove the write and consensus path). Until markets exist, the frontend's Live mode shows an empty-state panel; Guest mode works throughout.
+- **Deployed, but not yet seeded or exercised.** The contract is live at `0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d` and its views respond, but it has **no markets registered** and **no evaluation has been run on it** from this repository. The governor must run `scripts/interact_live.py --seed` (and then `--evaluate ETH` to prove the write and consensus path). Until markets are seeded (ten assets are ready to register), the frontend's Live mode shows an empty-state panel; Guest mode works throughout.
 - **The frontend depends on a pre-release SDK.** It uses `genlayer-js@2.0.0-rc.1`. The stable 1.x line encodes calldata in a format the v0.3 runner behind Studio Next rejects (`malformed_entry`), so every read and write failed against the live contract; the rc reads it correctly. Move to the stable 2.x release when it ships. The frontend's read path was verified against the deployed contract; the wallet **write** path (`evaluate_market_risk` from the browser) has not been exercised.
-- **The live validator round is untested here.** The 189 tests cover contract logic, clamps, velocity limits, parsing, and the pure validator-decision functions; a real multi-validator round (rotation, appeals) needs live-network integration tests.
+- **The live validator round is untested here.** The 234 tests cover contract logic, clamps, velocity limits, parsing, and the pure validator-decision functions; a real multi-validator round (rotation, appeals) needs live-network integration tests.
 - **Timing rests on block time.** The cooldown and `is_stale` use the transaction's block timestamp. It is deterministic across validators but only as accurate as the chain's clock, so treat the 30-minute cooldown as "about half an hour", not to-the-second.
 - **The velocity limit trades speed for safety.** It also slows *legitimate* tightening in a real crash (LTV 8500 → 2000 takes about nine steps, ~4.5 h). That is a deliberate choice; the circuit breaker is the fast path for an emergency, and the step sizes are constants in the contract.
-- **Telemetry sources are seed values.** The deploy script seeds public CoinGecko market pages so the pipeline can run keyless. Sources with true orderbook depth, implied volatility and funding (exchange or derivatives-analytics pages) can be registered per market through `register_market`; page structure and rate limits are the operator's responsibility.
+- **Telemetry sources are seed values, and their reach is unproven from validators.** The catalog seeds public Binance JSON endpoints (a 24h ticker, plus an optional top-20 depth book) so the pipeline can run keyless. They answer from a developer machine, but whether Studio Next's validators can reach them (and are not geo-blocked) has not been observed. The 24h ticker is a compact volatility and volume read, not implied volatility or funding; sources with those can be registered per market through `register_market` / `set_secondary_telemetry`. Endpoint stability and rate limits are the operator's responsibility.
 - **Experimental software.** ApexRisk is a research prototype on a test network. It is a parameter engine, not a lending pool, holds no user funds, and is not financial advice. It has not been audited.
 
 ## License

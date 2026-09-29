@@ -29,12 +29,9 @@ CHAIN_ID = 61997
 RPC_URL = "https://studio-next.genlayer.com/api"
 EXPLORER_URL = "https://explorer-studio-next.genlayer.com"
 
-# Public, keyless telemetry pages the validators scrape; symbol -> (url, ltv, liq, rate).
-MARKETS = {
-    "ETH": ("https://www.coingecko.com/en/coins/ethereum", 7500, 8000, 350),
-    "BTC": ("https://www.coingecko.com/en/coins/bitcoin", 8000, 8500, 300),
-    "SOL": ("https://www.coingecko.com/en/coins/solana", 6500, 7200, 500),
-}
+# The ten-asset catalog (baseline postures + public telemetry endpoints) lives in
+# seed_markets.py, shared with interact_live.py.
+from seed_markets import SEED_MARKETS  # noqa: E402
 
 
 def load_env_file() -> None:
@@ -68,7 +65,7 @@ def find_address(node) -> str | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--no-seed", action="store_true", help="skip registering ETH/BTC/SOL")
+    parser.add_argument("--no-seed", action="store_true", help="skip registering the ten-asset catalog")
     args = parser.parse_args()
 
     load_env_file()
@@ -92,15 +89,15 @@ def main() -> int:
 
     seeded = []
     if not args.no_seed:
-        for symbol, (url, ltv, liq, rate) in MARKETS.items():
+        for symbol, seed in SEED_MARKETS.items():
             tx = client.write_contract(
                 address=address,
                 function_name="register_market",
-                args=[symbol, url, ltv, liq, rate],
+                args=[symbol, seed.telemetry_url, seed.ltv, seed.liq, seed.rate],
                 account=account,
             )
             client.wait_for_transaction_receipt(transaction_hash=tx)
-            seeded.append({"symbol": symbol, "telemetry_url": url, "tx": str(tx)})
+            seeded.append({"symbol": symbol, "telemetry_url": seed.telemetry_url, "tx": str(tx)})
             print(f"Seeded    {symbol}  {tx}")
 
     ARTIFACT.parent.mkdir(exist_ok=True)

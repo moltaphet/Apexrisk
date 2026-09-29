@@ -1,3 +1,4 @@
+import { MARKET_CATALOG } from "./catalog";
 import {
   MAX_LIQ_STEP_BPS,
   MAX_LTV_STEP_DOWN_BPS,
@@ -15,18 +16,50 @@ import type { Market, Posture, PostureNumbers, RiskTier, RunState } from "./type
 // exactly as on-chain (ApexRisk._tier_for_ltv).
 type CommitteeProposal = PostureNumbers & { rationale: string };
 
+// One pre-populated snapshot per catalog asset. The figures are illustrative mock
+// data, not live prices. Every committee proposal is chosen so the guest demo tells
+// a different story: most nudge a market a little, while SOL asks for a large
+// tightening that the velocity limit turns into a multi-step walk.
 export const GUEST_TELEMETRY: Record<string, { page: string; committee: CommitteeProposal }> = {
   ETH: {
-    page: "ETH-USD · depth ±2%: $41.3M · realised vol (30d): 46% · perp funding: +0.011%/8h · OI: $9.8B",
-    committee: { max_ltv_bps: 7200, liquidation_threshold_bps: 7900, borrow_rate_base_bps: 420, rationale: "Deep books and contained funding support a modest LTV trim." },
+    page: "ETHUSDT · 24h range $2,690–$2,790 (3.7%) · quote volume $9.1B · top-20 book depth $18.4M · spread 0.4 bps",
+    committee: { max_ltv_bps: 7600, liquidation_threshold_bps: 8200, borrow_rate_base_bps: 380, rationale: "Deep books and a contained range support a modest LTV trim, not a cut." },
   },
   BTC: {
-    page: "BTC-USD · depth ±2%: $118.6M · realised vol (30d): 31% · perp funding: +0.006%/8h · OI: $24.1B",
-    committee: { max_ltv_bps: 8100, liquidation_threshold_bps: 8600, borrow_rate_base_bps: 280, rationale: "Deepest liquidity and calm volatility keep BTC in the lowest tier." },
+    page: "BTCUSDT · 24h range $60,850–$62,300 (2.4%) · quote volume $17.6B · top-20 book depth $52.1M · spread 0.1 bps",
+    committee: { max_ltv_bps: 8100, liquidation_threshold_bps: 8600, borrow_rate_base_bps: 280, rationale: "Deepest liquidity and the calmest range keep BTC at the top of the envelope." },
   },
   SOL: {
-    page: "SOL-USD · depth ±2%: $6.2M · realised vol (30d): 88% · perp funding: +0.052%/8h · OI: $2.4B",
-    committee: { max_ltv_bps: 4800, liquidation_threshold_bps: 5600, borrow_rate_base_bps: 780, rationale: "Thin depth, elevated volatility and stretched funding warrant tighter limits." },
+    page: "SOLUSDT · 24h range $131–$149 (13.7%) · quote volume $2.4B · top-20 book depth $2.1M · spread 1.1 bps",
+    committee: { max_ltv_bps: 4800, liquidation_threshold_bps: 5600, borrow_rate_base_bps: 780, rationale: "A 14% daily range on thin books warrants sharply tighter limits." },
+  },
+  AVAX: {
+    page: "AVAXUSDT · 24h range $22.1–$24.0 (8.6%) · quote volume $310M · top-20 book depth $1.3M · spread 1.6 bps",
+    committee: { max_ltv_bps: 6000, liquidation_threshold_bps: 6800, borrow_rate_base_bps: 560, rationale: "Mid-cap liquidity with an elevated range: trim LTV, raise the rate." },
+  },
+  LINK: {
+    page: "LINKUSDT · 24h range $11.4–$12.1 (6.1%) · quote volume $190M · top-20 book depth $1.6M · spread 1.2 bps",
+    committee: { max_ltv_bps: 6800, liquidation_threshold_bps: 7400, borrow_rate_base_bps: 430, rationale: "Steady volume and a moderate range; a small tightening is enough." },
+  },
+  ARB: {
+    page: "ARBUSDT · 24h range $0.52–$0.58 (11.5%) · quote volume $95M · top-20 book depth $0.7M · spread 2.4 bps",
+    committee: { max_ltv_bps: 5500, liquidation_threshold_bps: 6300, borrow_rate_base_bps: 620, rationale: "Thinner books and a wide range for an L2 token justify a lower LTV." },
+  },
+  OP: {
+    page: "OPUSDT · 24h range $1.42–$1.55 (9.2%) · quote volume $80M · top-20 book depth $0.8M · spread 2.1 bps",
+    committee: { max_ltv_bps: 5600, liquidation_threshold_bps: 6400, borrow_rate_base_bps: 600, rationale: "Comparable to ARB: moderate depth, wide range; tighten slightly." },
+  },
+  NEAR: {
+    page: "NEARUSDT · 24h range $3.05–$3.38 (10.8%) · quote volume $120M · top-20 book depth $0.9M · spread 1.9 bps",
+    committee: { max_ltv_bps: 5400, liquidation_threshold_bps: 6200, borrow_rate_base_bps: 650, rationale: "Volatile week on modest depth; pull LTV toward the lower end." },
+  },
+  SUI: {
+    page: "SUIUSDT · 24h range $1.71–$1.98 (15.8%) · quote volume $260M · top-20 book depth $0.6M · spread 2.8 bps",
+    committee: { max_ltv_bps: 5000, liquidation_threshold_bps: 5900, borrow_rate_base_bps: 720, rationale: "The widest range in the catalog on thin books: the tightest posture." },
+  },
+  BNB: {
+    page: "BNBUSDT · 24h range $548–$566 (3.3%) · quote volume $610M · top-20 book depth $6.4M · spread 0.8 bps",
+    committee: { max_ltv_bps: 7500, liquidation_threshold_bps: 8000, borrow_rate_base_bps: 400, rationale: "Calm range and healthy depth: the current posture already fits." },
   },
 };
 
@@ -38,20 +71,17 @@ export function tierForLtv(ltv: number): RiskTier {
   return "CRITICAL";
 }
 
-export const GUEST_MARKETS: Market[] = [
-  ["ETH", 7500, 8000, 350],
-  ["BTC", 8000, 8500, 300],
-  ["SOL", 6500, 7200, 500],
-].map(([symbol, ltv, liq, rate]) => ({
-  symbol: symbol as string,
+/** All ten catalog markets, starting from the same baselines the seed script registers. */
+export const GUEST_MARKETS: Market[] = MARKET_CATALOG.map((e) => ({
+  symbol: e.symbol,
   active: true,
-  telemetry_url: `https://telemetry.example.com/${(symbol as string).toLowerCase()}`,
+  telemetry_url: e.telemetryUrl,
   secondary_telemetry_url: "",
-  max_ltv_bps: ltv as number,
-  liquidation_threshold_bps: liq as number,
-  liquidation_margin_bps: (liq as number) - (ltv as number),
-  borrow_rate_base_bps: rate as number,
-  risk_tier: tierForLtv(ltv as number),
+  max_ltv_bps: e.ltv,
+  liquidation_threshold_bps: e.liq,
+  liquidation_margin_bps: e.liq - e.ltv,
+  borrow_rate_base_bps: e.rate,
+  risk_tier: tierForLtv(e.ltv),
   circuit_breaker: false,
   evaluation_count: 0,
   last_evaluated_at: 0,

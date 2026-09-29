@@ -5,7 +5,8 @@ import { RiskTerminal } from "./components/RiskTerminal";
 import { AboutModal } from "./components/AboutModal";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
-import { IS_DEPLOYED, SYMBOLS } from "./config";
+import { MARKET_CATALOG } from "./catalog";
+import { IS_DEPLOYED } from "./config";
 import { GUEST_MARKETS, runGuestEvaluation } from "./guest";
 import type { Market, RunState } from "./types";
 
@@ -17,6 +18,19 @@ const readGuestPref = () => {
     return false;
   }
 };
+
+/**
+ * With ten market cards the runner can sit well below the fold. After the user
+ * picks a market, bring the runner into view, but only if it is not already
+ * mostly visible, and without animation for users who prefer reduced motion.
+ */
+function revealRunner() {
+  const el = document.getElementById("terminal");
+  if (!el) return;
+  if (el.getBoundingClientRect().top < window.innerHeight * 0.7) return;
+  const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+}
 
 const idleRun = (symbol: string, mode: RunState["mode"]): RunState => ({
   symbol,
@@ -31,7 +45,7 @@ export default function App() {
   const [markets, setMarkets] = useState<Market[]>(guest ? GUEST_MARKETS : []);
   const [loading, setLoading] = useState(!guest);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string>(SYMBOLS[0]);
+  const [selected, setSelected] = useState<string>(MARKET_CATALOG[0].symbol);
   const [account, setAccount] = useState<string | null>(null);
   const [run, setRun] = useState<RunState | null>(null);
   const [busy, setBusy] = useState(false);
@@ -162,6 +176,7 @@ export default function App() {
               if (!busy) {
                 setSelected(s);
                 setRun(null);
+                revealRunner();
               }
             }}
           />
