@@ -1,4 +1,10 @@
-import type { Market, Posture, RiskTier, RunState } from "./types";
+import {
+  MAX_LIQ_STEP_BPS,
+  MAX_LTV_STEP_DOWN_BPS,
+  MAX_LTV_STEP_UP_BPS,
+  MAX_RATE_STEP_BPS,
+} from "./config";
+import type { Market, Posture, PostureNumbers, RiskTier, RunState } from "./types";
 
 // Offline / Guest mode: a pre-populated telemetry snapshot per asset plus a local
 // port of the contract's safety envelope, so reviewers can walk the entire
@@ -7,7 +13,7 @@ import type { Market, Posture, RiskTier, RunState } from "./types";
 
 // The committee proposes numbers only; the tier is derived from the clamped LTV,
 // exactly as on-chain (ApexRisk._tier_for_ltv).
-type CommitteeProposal = Omit<Posture, "risk_tier"> & { rationale: string };
+type CommitteeProposal = PostureNumbers & { rationale: string };
 
 export const GUEST_TELEMETRY: Record<string, { page: string; committee: CommitteeProposal }> = {
   ETH: {
@@ -40,6 +46,7 @@ export const GUEST_MARKETS: Market[] = [
   symbol: symbol as string,
   active: true,
   telemetry_url: `https://telemetry.example.com/${(symbol as string).toLowerCase()}`,
+  secondary_telemetry_url: "",
   max_ltv_bps: ltv as number,
   liquidation_threshold_bps: liq as number,
   liquidation_margin_bps: (liq as number) - (ltv as number),
@@ -47,6 +54,9 @@ export const GUEST_MARKETS: Market[] = [
   risk_tier: tierForLtv(ltv as number),
   circuit_breaker: false,
   evaluation_count: 0,
+  last_evaluated_at: 0,
+  updated_at: 0,
+  is_stale: true, // never evaluated, exactly like a freshly registered market on-chain
   last_rationale: "",
 }));
 
@@ -63,6 +73,22 @@ export function applyInvariants(p: CommitteeProposal): Posture {
     borrow_rate_base_bps: clamp(p.borrow_rate_base_bps, 100, 2500),
     risk_tier: tierForLtv(ltv),
   };
+}
+
+/** Mirror of ApexRisk._step: move `prev` toward `target` by a bounded amount. */
+export function step(prev: number, target: number, maxDown: number, maxUp: number): number {
+  const delta = target - prev;
+  return prev + Math.max(-maxDown, Math.min(maxUp, delta));
+}
+
+/** Mirror of ApexRisk._velocity_limited: one bounded step, then the invariants again. */
+export function velocityLimited(prior: PostureNumbers, target: Posture): Posture {
+  return applyInvariants({
+    max_ltv_bps: step(prior.max_ltv_bps, target.max_ltv_bps, MAX_LTV_STEP_DOWN_BPS, MAX_LTV_STEP_UP_BPS),
+    liquidation_threshold_bps: step(prior.liquidation_threshold_bps, target.liquidation_threshold_bps, MAX_LIQ_STEP_BPS, MAX_LIQ_STEP_BPS),
+    borrow_rate_base_bps: step(prior.borrow_rate_base_bps, target.borrow_rate_base_bps, MAX_RATE_STEP_BPS, MAX_RATE_STEP_BPS),
+    rationale: "",
+  });
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -88,7 +114,9 @@ export async function runGuestEvaluation(
     borrow_rate_base_bps: market.borrow_rate_base_bps,
     risk_tier: market.risk_tier,
   };
-  const applied = applyInvariants(snap.committee);
+  const target = applyInvariants(snap.committee);
+  const applied = velocityLimited(prior, target);
+  const now = Math.floor(Date.now() / 1000);
   emit({
     steps: ["done", "done", "done"],
     status: "SIMULATED",
@@ -97,6 +125,7 @@ export async function runGuestEvaluation(
     result: {
       prior,
       applied,
+      target,
       rationale: snap.committee.rationale,
       finalized: false,
       payload: {
@@ -108,17 +137,29 @@ export async function runGuestEvaluation(
           liquidation_threshold_bps: snap.committee.liquidation_threshold_bps,
           borrow_rate_base_bps: snap.committee.borrow_rate_base_bps,
         },
+        target_posture: target,
         applied_posture: applied,
         prior_posture: prior,
+        velocity_limits_bps: {
+          ltv_step_down: MAX_LTV_STEP_DOWN_BPS,
+          ltv_step_up: MAX_LTV_STEP_UP_BPS,
+          rate_step: MAX_RATE_STEP_BPS,
+          liquidation_step: MAX_LIQ_STEP_BPS,
+        },
         rationale: snap.committee.rationale,
       },
     },
   });
+  // The simulator does not enforce the 30-minute cooldown, so reviewers can
+  // click through several steps; on-chain the contract does.
   return {
     ...market,
     ...applied,
     liquidation_margin_bps: applied.liquidation_threshold_bps - applied.max_ltv_bps,
     evaluation_count: market.evaluation_count + 1,
+    last_evaluated_at: now,
+    updated_at: now,
+    is_stale: false,
     last_rationale: snap.committee.rationale,
   };
 }

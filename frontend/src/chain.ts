@@ -4,6 +4,7 @@ import {
   CHAIN_ID,
   CHAIN_NAME,
   CONTRACT_ADDRESS,
+  EVAL_COOLDOWN_SECS,
   EXPLORER_URL,
   RPC_URL,
 } from "./config";
@@ -105,6 +106,15 @@ export async function runEvaluation(
       await reader.readContract({ address: addr, functionName: "get_market", args: [symbol] }),
     ) as Market);
 
+    // The contract enforces the cooldown; checking here just spares a wallet
+    // prompt and a doomed transaction.
+    const waitSecs = before.last_evaluated_at + EVAL_COOLDOWN_SECS - Math.floor(Date.now() / 1000);
+    if (before.last_evaluated_at > 0 && waitSecs > 0) {
+      throw new Error(
+        `Evaluation cooldown active for ${symbol}: about ${Math.ceil(waitSecs / 60)} min remaining (the contract allows one evaluation per ${EVAL_COOLDOWN_SECS / 60} min per market).`,
+      );
+    }
+
     emit({ detail: `Submitting evaluation for ${symbol}; wallet confirmation required…` });
     const hash = (await writer.writeContract({
       address: addr,
@@ -147,6 +157,7 @@ export async function runEvaluation(
       result: {
         prior: toPosture(before),
         applied: toPosture(after),
+        target: history[0]?.target_posture,
         rationale: history[0]?.rationale ?? after.last_rationale,
         finalized: status === "FINALIZED",
         payload: history[0] ?? { note: "history record unavailable" },

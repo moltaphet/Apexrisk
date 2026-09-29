@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Braces, CheckCircle2, ChevronDown, ExternalLink, Loader2, Play, XCircle, Circle } from "lucide-react";
-import { explorerTxUrl } from "../config";
+import {
+  EVAL_COOLDOWN_SECS,
+  MAX_LTV_STEP_DOWN_BPS,
+  MAX_LTV_STEP_UP_BPS,
+  MAX_RATE_STEP_BPS,
+  explorerTxUrl,
+} from "../config";
 import { GUEST_TELEMETRY } from "../guest";
 import type { Posture, RunState, StepState } from "../types";
 import { TierBadge, pct } from "./RiskTerminal";
@@ -40,7 +46,27 @@ function Delta({ label, from, to, fmt = pct }: { label: string; from: number; to
   );
 }
 
-function Result({ prior, applied, rationale }: { prior: Posture; applied: Posture; rationale: string }) {
+/** Where the committee wants the market vs what the velocity limit allowed this step. */
+function VelocityNote({ applied, target }: { applied: Posture; target?: Posture }) {
+  if (!target) return null;
+  const limited =
+    applied.max_ltv_bps !== target.max_ltv_bps ||
+    applied.liquidation_threshold_bps !== target.liquidation_threshold_bps ||
+    applied.borrow_rate_base_bps !== target.borrow_rate_base_bps;
+  if (!limited) return null;
+  return (
+    <div className="mt-3 rounded-md border border-warn/30 bg-warn/5 p-3 text-[11px] leading-relaxed text-mute">
+      <span className="font-semibold text-warn">Velocity-limited.</span> The committee target is LTV{" "}
+      <span className="text-white">{pct(target.max_ltv_bps)}</span>, liquidation{" "}
+      <span className="text-white">{pct(target.liquidation_threshold_bps)}</span>, rate{" "}
+      <span className="text-white">{pct(target.borrow_rate_base_bps)}</span>. One evaluation may move LTV at most{" "}
+      {pct(MAX_LTV_STEP_DOWN_BPS)} down / {pct(MAX_LTV_STEP_UP_BPS)} up and the rate {pct(MAX_RATE_STEP_BPS)}, so the market
+      walks toward the target one step per {EVAL_COOLDOWN_SECS / 60}-minute cooldown, and borrowers are never liquidated by a single reading.
+    </div>
+  );
+}
+
+function Result({ prior, applied, target, rationale }: { prior: Posture; applied: Posture; target?: Posture; rationale: string }) {
   return (
     <div className="mt-5 rounded-lg border border-apex/30 bg-apex/5 p-4">
       <div className="flex items-center justify-between">
@@ -54,6 +80,7 @@ function Result({ prior, applied, rationale }: { prior: Posture; applied: Postur
         <Delta label="Liq. threshold" from={prior.liquidation_threshold_bps} to={applied.liquidation_threshold_bps} />
         <Delta label="Base borrow" from={prior.borrow_rate_base_bps} to={applied.borrow_rate_base_bps} />
       </div>
+      <VelocityNote applied={applied} target={target} />
       {rationale && <p className="mt-3 text-xs leading-relaxed text-mute">“{rationale}”</p>}
     </div>
   );
@@ -167,7 +194,7 @@ export function ConsensusRunner({ symbol, guest, run, busy, canRunLive, liveBloc
 
       {allDone && run?.result && !run.error && (
         <>
-          <Result prior={run.result.prior} applied={run.result.applied} rationale={run.result.rationale} />
+          <Result prior={run.result.prior} applied={run.result.applied} target={run.result.target} rationale={run.result.rationale} />
           <PayloadDrawer payload={run.result.payload} />
           {run.mode === "guest" && <p className="mt-2 text-[11px] text-warn">Simulated outcome, nothing was written to the chain.</p>}
         </>

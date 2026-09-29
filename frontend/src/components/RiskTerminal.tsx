@@ -1,4 +1,4 @@
-import { Activity, OctagonAlert, ShieldCheck } from "lucide-react";
+import { Activity, Clock, OctagonAlert, ShieldCheck } from "lucide-react";
 import type { Market, RiskTier } from "../types";
 
 export const TIER_STYLE: Record<RiskTier, string> = {
@@ -58,6 +58,19 @@ function LtvBar({ ltv, liq, margin }: { ltv: number; liq: number; margin: number
       </div>
     </div>
   );
+}
+
+/** Freshness of the committed posture: never evaluated / stale (>24h) / updated N ago. */
+function Freshness({ m }: { m: Market }) {
+  if (m.last_evaluated_at === 0) {
+    return <span className="inline-flex items-center gap-1 text-warn"><Clock size={12} /> never evaluated · seed posture</span>;
+  }
+  if (m.is_stale) {
+    return <span className="inline-flex items-center gap-1 text-warn"><Clock size={12} /> stale · over 24h old</span>;
+  }
+  const mins = Math.max(0, Math.floor((Date.now() / 1000 - m.updated_at) / 60));
+  const ago = mins < 1 ? "just now" : mins < 60 ? `${mins} min ago` : `${Math.floor(mins / 60)} h ago`;
+  return <span className="inline-flex items-center gap-1 text-mute"><Clock size={12} /> updated {ago}</span>;
 }
 
 function Metric({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -130,7 +143,9 @@ export function RiskTerminal({ markets, loading, error, simulated, selected, onS
                     <Metric label="Evaluations" value={String(m.evaluation_count)} sub={m.active ? "market active" : "market paused"} />
                   </div>
 
-                  <div className="relative mt-4 flex items-center justify-between text-[11px]">
+                  <div className="relative mt-4 text-[11px]"><Freshness m={m} /></div>
+
+                  <div className="relative mt-2 flex items-center justify-between text-[11px]">
                     {m.circuit_breaker ? (
                       <span className="inline-flex items-center gap-1 text-crit"><OctagonAlert size={13} /> circuit breaker tripped</span>
                     ) : (

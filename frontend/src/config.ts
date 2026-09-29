@@ -37,4 +37,11 @@ export const DOCS_URL = "https://docs.genlayer.com";
 // Set to the public repository URL once published; the footer shows a disabled label while empty.
 export const GITHUB_URL = "";
 export const APP_VERSION = "v1.0-alpha";
-export const TESTS_PASSING = 80;
+export const TESTS_PASSING = 189;
+
+// Mirrors of the contract's velocity limits (contracts/apex_risk.py).
+export const EVAL_COOLDOWN_SECS = 1800;
+export const MAX_LTV_STEP_DOWN_BPS = 750;
+export const MAX_LTV_STEP_UP_BPS = 350;
+export const MAX_RATE_STEP_BPS = 300;
+export const MAX_LIQ_STEP_BPS = 750;
