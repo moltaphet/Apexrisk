@@ -4,9 +4,11 @@
 
 **Dynamic collateral parameter adjustment powered by GenLayer Multi-Validator LLM Consensus & real-time web telemetry.**
 
+[![Live Contract](https://img.shields.io/badge/Live%20Contract-0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d-34d399?style=for-the-badge&logo=ethereum&logoColor=white)](https://explorer-studio-next.genlayer.com/address/0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d)
+
 [![Network](https://img.shields.io/badge/GenLayer-Studio%20Next%20(Chain%20ID%3A%2061997)-34d399?style=flat-square)](https://explorer-studio-next.genlayer.com)
 [![Contract](https://img.shields.io/badge/Contract-Python%20GenVM%20Intelligent%20Contract-3776ab?style=flat-square&logo=python&logoColor=white)](contracts/apex_risk.py)
-[![Tests](https://img.shields.io/badge/Pytest-189%2F189%20Unit%20Tests%20Passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](tests/direct)
+[![Tests](https://img.shields.io/badge/Pytest-189%2F189%20Unit%20%26%20Regression%20Tests%20Passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](tests/direct)
 [![Frontend](https://img.shields.io/badge/Frontend-React%20%2F%20Vite%20%2F%20Tailwind%20CSS-61dafb?style=flat-square&logo=react&logoColor=black)](frontend)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](#license)
 
@@ -24,7 +26,12 @@
 6. [Frontend risk terminal](#6-frontend-risk-terminal)
 7. [Repository setup & local run](#7-repository-setup--local-run)
 8. [Deployment & network](#8-deployment--network)
-9. [Status & honest limitations](#9-status--honest-limitations)
+9. [Trust assumptions & security considerations](#9-trust-assumptions--security-considerations)
+10. [Status & honest limitations](#10-status--honest-limitations)
+
+---
+
+> **Live on Studio Next:** [`0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d`](https://explorer-studio-next.genlayer.com/address/0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d) · chain `61997` · verified reachable over the RPC (see [Deployment](#8-deployment--network)).
 
 ---
 
@@ -149,7 +156,7 @@ Additional guarantees:
 - **Telemetry URL policy** (governor-supplied, still validated): `https` only; no IP literals, `localhost`, private suffixes (`.internal`, `.local`, …) or DNS-rebinding hosts (`nip.io`, `sslip.io`, …).
 - **Access control.** `register_market`, `set_secondary_telemetry`, `toggle_circuit_breaker`, `set_market_active` and `transfer_governor` are governor-only. `evaluate_market_risk` is open to anyone; that is safe precisely because the invariants, the step limits and the cooldown, not the caller or the model, bound the outcome.
 - **Governor handover.** `transfer_governor(new_governor)` rejects malformed input, the zero address and a no-op transfer, so the role cannot be burned by accident. It is a one-step transfer, so double-check the address.
-- **No fast path around the limits.** There is deliberately no governor method that writes a posture directly: `register_market` re-seeds a posture (clamped, tier derived) but every autonomous change goes through the velocity limiter.
+- **No *autonomous* fast path around the limits.** Every change made by `evaluate_market_risk` goes through the velocity limiter. The governor, however, can re-seed a market's posture instantly with `register_market` (clamped to the envelope and tier-derived, but **not** step-limited); see the trust assumptions in [section 9](#9-trust-assumptions--security-considerations).
 
 > **Scope note on the breaker.** The circuit breaker freezes *this engine's parameter updates*. ApexRisk is a risk-parameter engine, not a lending pool: a lending protocol integrating it would read `circuit_breaker` from `get_market` and decide to pause borrows itself.
 
@@ -283,20 +290,67 @@ npm run build      # type-check (tsc) + production bundle
 | Chain ID | `61997` |
 | RPC | `https://studio-next.genlayer.com/api` |
 | Explorer | https://explorer-studio-next.genlayer.com |
+| **Contract** | [`0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d`](https://explorer-studio-next.genlayer.com/address/0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d) |
+
+### Verified on-chain
+
+Checked over the Studio Next RPC with `scripts/interact_live.py` (read-only, no funds needed):
+
+| Check | Result |
+|---|---|
+| Chain id | `61997` |
+| `get_governor()` | `0x1f9813eeb2de53134af5c824ca156ce82c4eb0fa` |
+| Deployed method list | exactly the 11 methods of `contracts/apex_risk.py` (including `transfer_governor` and `set_secondary_telemetry`), so it is the current contract |
+| `get_history_length()` | `0` |
+| `get_all_markets()` | `[]`, **no markets registered yet** |
+
+Not verified: the deployed bytecode was not byte-compared to the repository (the SDK has no code getter), and **no write transaction has been sent** from this repository, so the live evaluate-and-consensus path has not been exercised yet.
+
+```bash
+# read-only health check (no key needed)
+.venv/bin/python scripts/interact_live.py
+
+# governor only: register ETH / BTC / SOL, then run a live evaluation
+DEPLOYER_PRIVATE_KEY=0x<funded governor key> .venv/bin/python scripts/interact_live.py --seed
+DEPLOYER_PRIVATE_KEY=0x<funded governor key> .venv/bin/python scripts/interact_live.py --evaluate ETH
+```
+
+`interact_live.py` refuses to send `--seed` from any account that is not the contract's governor, and only evaluates markets that exist. To deploy a fresh instance instead:
 
 ```bash
 DEPLOYER_PRIVATE_KEY=0x<funded Studio Next key> .venv/bin/python scripts/deploy.py
 ```
 
-The script deploys the contract, registers ETH / BTC / SOL, writes `deployments/studio-next.json`, and pins the address in `frontend/src/config.ts`. The key is read only from the environment or a git-ignored `.env`.
+`deploy.py` deploys the contract, registers ETH / BTC / SOL, writes `deployments/studio-next.json`, and pins the address in `frontend/src/config.ts`. Keys are read only from the environment or a git-ignored `.env`.
 
 > The RPC path is `/api`: `/rpc` returns HTTP 404 on Studio Next.
 
 ---
 
-## 9. Status & honest limitations
+## 9. Trust assumptions & security considerations
 
-- **Not yet deployed.** No live Studio Next address exists yet, so `deployments/studio-next.json` holds a zero-address placeholder and the frontend runs in Guest mode until `scripts/deploy.py` has been run. Nothing in this README claims a live on-chain deployment.
+What you are trusting when you rely on ApexRisk, stated plainly.
+
+**Governor telemetry updates are immediate (hackathon agility).** The governor can change a market's telemetry source (`register_market`, `set_secondary_telemetry`), re-seed its posture, pause it, trip its breaker, or transfer the role, and each takes effect in one transaction with no delay. A compromised governor key could therefore point a market at a hostile page or re-seed a posture within the envelope. **Specified for production mainnet: a 48-hour timelock** on telemetry and governance changes, with governance behind a multisig. The timelock is *not implemented* in this contract.
+
+**Dual-source telemetry and single-source fallback.** The contract supports two independent telemetry sources per market. When both answer, the committee sees both, labelled, and is told to weigh them. If one is unavailable, consensus **falls back to the surviving feed** instead of reverting, so a single outage or a blocked page cannot deny service. The trade-off: on fallback the committee has one source and no cross-check, and a market with no secondary configured is always single-source. Configuring a second, independent source per market is the operator's job. Only when *no* source answers does an evaluation revert, with state untouched.
+
+**Asymmetric velocity limiting.** Per evaluation, LTV may fall at most **750 bps (7.5 points)** and rise at most **350 bps (3.5 points)**, the rate may move at most 300 bps, and a market can be evaluated at most once per **30 minutes**. Tightening is deliberately faster than loosening. This bounds the *rate of change*, so a single manipulated reading can no longer swing parameters by a whole envelope in one transaction, which removes the instantaneous single-transaction cliff. It does **not** make liquidations impossible: an LTV that drops 7.5 points can still push a thin-margin position over its threshold, and the limit is per evaluation, not a fixed epoch (evaluations can also be less frequent than every 30 minutes). Integrators should still size liquidation buffers accordingly.
+
+Other assumptions:
+
+- **Validators and the model.** The LLM committee is advisory and every output is clamped and step-limited, but validators are trusted to actually run the pipeline honestly, and the safety of a *correct-looking wrong* reading rests on the velocity limit and the circuit breaker, not on the model.
+- **Telemetry pages are public and unauthenticated.** A page owner can change what a market sees. Sanitisation, the isolated-data prompt and the clamps limit the damage; they do not make a lying source honest.
+- **One-step governor transfer.** `transfer_governor` takes effect immediately; a wrong address (other than zero, which is rejected) hands over control.
+- **Block time.** The cooldown and freshness checks use the block timestamp (deterministic, but only as accurate as the chain's clock).
+- **Unaudited testnet prototype.** Not audited, deployed on a test network, holds no user funds, and is not financial advice.
+
+---
+
+## 10. Status & honest limitations
+
+- **Deployed, but not yet seeded or exercised.** The contract is live at `0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d` and its views respond, but it has **no markets registered** and **no evaluation has been run on it** from this repository. The governor must run `scripts/interact_live.py --seed` (and then `--evaluate ETH` to prove the write and consensus path). Until markets exist, the frontend's Live mode shows an empty-state panel; Studio Guest mode works throughout.
+- **The frontend depends on a pre-release SDK.** It uses `genlayer-js@2.0.0-rc.1`. The stable 1.x line encodes calldata in a format the v0.3 runner behind Studio Next rejects (`malformed_entry`), so every read and write failed against the live contract; the rc reads it correctly. Move to the stable 2.x release when it ships. The frontend's read path was verified against the deployed contract; the wallet **write** path (`evaluate_market_risk` from the browser) has not been exercised.
 - **The live validator round is untested here.** The 189 tests cover contract logic, clamps, velocity limits, parsing, and the pure validator-decision functions; a real multi-validator round (rotation, appeals) needs live-network integration tests.
 - **Timing rests on block time.** The cooldown and `is_stale` use the transaction's block timestamp. It is deterministic across validators but only as accurate as the chain's clock, so treat the 30-minute cooldown as "about half an hour", not to-the-second.
 - **The velocity limit trades speed for safety.** It also slows *legitimate* tightening in a real crash (LTV 8500 → 2000 takes about nine steps, ~4.5 h). That is a deliberate choice; the circuit breaker is the fast path for an emergency, and the step sizes are constants in the contract.

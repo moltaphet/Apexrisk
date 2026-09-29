@@ -109,6 +109,17 @@ export function RiskTerminal({ markets, loading, error, simulated, selected, onS
 
       {error && <div className="mb-3 rounded-md border border-warn/40 bg-warn/10 p-3 text-xs text-warn">{error}</div>}
 
+      {!loading && !error && markets.length === 0 && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm leading-relaxed text-mute backdrop-blur-md">
+          <div className="font-display text-base font-semibold text-white">No markets are registered on this contract yet</div>
+          <p className="mt-2">
+            The contract is deployed and answering, but the governor has not run <code className="text-apex">register_market</code> for any asset.
+            Seed ETH, BTC and SOL with <code className="text-apex">scripts/interact_live.py --seed</code>, or switch to{" "}
+            <span className="text-warn">Studio Guest</span> in the navbar to walk the full consensus flow on a simulated snapshot.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-5 md:grid-cols-3">
         {loading && markets.length === 0
           ? [0, 1, 2].map((i) => <div key={i} className="h-72 animate-pulse rounded-2xl border border-line bg-panel" />)

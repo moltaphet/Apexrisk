@@ -14,7 +14,7 @@ export const EXPLORER_URL = "https://explorer-studio-next.genlayer.com";
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // Studio Next deployment. `scripts/deploy.py` rewrites this line after a deploy.
-export const STUDIO_NEXT_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
+export const STUDIO_NEXT_CONTRACT_ADDRESS = "0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d";
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 

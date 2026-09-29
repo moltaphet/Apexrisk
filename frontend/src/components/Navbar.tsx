@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ExternalLink, LogOut, Menu, ShieldCheck, Wallet, X } from "lucide-react";
-import { APP_VERSION, CHAIN_ID, CHAIN_NAME, EXPLORER_URL } from "../config";
+import { APP_VERSION, CHAIN_ID, CHAIN_NAME, CONTRACT_ADDRESS, IS_DEPLOYED, explorerAddressUrl, EXPLORER_URL } from "../config";
+
+// The nav's Explorer link goes straight to the contract once one is configured.
+const EXPLORER_HREF = IS_DEPLOYED ? explorerAddressUrl(CONTRACT_ADDRESS) : EXPLORER_URL;
 
 interface Props {
   guest: boolean;
@@ -61,7 +64,7 @@ export function Navbar(p: Props) {
             <a key={l.label} href={l.href} className={linkCls}>{l.label}</a>
           ))}
           <button onClick={p.onAbout} className={linkCls}>Architecture / About</button>
-          <a href={EXPLORER_URL} target="_blank" rel="noreferrer" className={`${linkCls} inline-flex items-center gap-1`}>
+          <a href={EXPLORER_HREF} target="_blank" rel="noreferrer" className={`${linkCls} inline-flex items-center gap-1`}>
             Explorer <ExternalLink size={12} />
           </a>
         </div>
@@ -151,7 +154,7 @@ export function Navbar(p: Props) {
             <a key={l.label} href={l.href} onClick={() => setMenu(false)} className={`block ${linkCls}`}>{l.label}</a>
           ))}
           <button onClick={() => { setMenu(false); p.onAbout(); }} className={`block w-full text-left ${linkCls}`}>Architecture / About</button>
-          <a href={EXPLORER_URL} target="_blank" rel="noreferrer" className={`block ${linkCls}`}>Explorer ↗</a>
+          <a href={EXPLORER_HREF} target="_blank" rel="noreferrer" className={`block ${linkCls}`}>Explorer ↗</a>
           <div className="flex gap-2 pt-2 text-[11px]">
             {([[false, "Live Contract"], [true, "Studio Guest"]] as const).map(([g, label]) => (
               <button

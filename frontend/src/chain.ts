@@ -1,5 +1,5 @@
 import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
+import { studioDevnet } from "genlayer-js/chains";
 import {
   CHAIN_ID,
   CHAIN_NAME,
@@ -10,14 +10,16 @@ import {
 } from "./config";
 import type { HistoryRecord, Market, Posture, RunState } from "./types";
 
-// studionet is the SDK's Studio preset; pin id/name/rpc to Studio Next (61997).
+// studioDevnet is the SDK preset for chain 61997; pin name/rpc to Studio Next.
+// genlayer-js 1.x encodes calldata in a format the v0.3 runner behind Studio Next
+// rejects ("malformed_entry"), so every read and write failed; 2.0.0-rc.1 fixed it.
 export const chain = {
-  ...studionet,
+  ...studioDevnet,
   id: CHAIN_ID,
   name: CHAIN_NAME,
   rpcUrls: { default: { http: [RPC_URL] } },
   blockExplorers: { default: { name: "GenLayer Explorer", url: EXPLORER_URL } },
-} as typeof studionet;
+} as typeof studioDevnet;
 
 const addr = CONTRACT_ADDRESS as `0x${string}`;
 const reader = createClient({ chain, endpoint: RPC_URL });
