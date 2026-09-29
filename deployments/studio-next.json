@@ -4,32 +4,270 @@
   "rpc_url": "https://studio-next.genlayer.com/api",
   "explorer_url": "https://explorer-studio-next.genlayer.com",
   "contract": "ApexRisk",
-  "contract_address": "0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d",
-  "status": "DEPLOYED",
-  "explorer_contract_url": "https://explorer-studio-next.genlayer.com/address/0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d",
-  "governor": "0x1f9813eeb2de53134af5c824ca156ce82c4eb0fa",
+  "contract_address": "0x6cc9f05CF5561D35d26bccC174bAcF44583bD4A7",
+  "deployer": "0xebf5789Dbb6498Ce9De0e1222BAe4AD47fd4c486",
+  "deploy_tx": "0x0f3c4218469ff5ad401e6985af9bc54a95602c76d9573a7aa323d3ea3f92dc78",
+  "deployed_at": "2026-09-29T11:52:33.443064+00:00",
+  "explorer_contract_url": "https://explorer-studio-next.genlayer.com/address/0x6cc9f05CF5561D35d26bccC174bAcF44583bD4A7",
+  "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x0f3c4218469ff5ad401e6985af9bc54a95602c76d9573a7aa323d3ea3f92dc78",
+  "seeded_markets": [
+    {
+      "symbol": "ETH",
+      "tx": "0xfbf514f92b8508ac93d306570e99bca4c7306e1b2f53175cc3c2349ec28ebd74",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xfbf514f92b8508ac93d306570e99bca4c7306e1b2f53175cc3c2349ec28ebd74"
+    },
+    {
+      "symbol": "BTC",
+      "tx": "0x2d1cea8895763fc50c6520069e24fed7850c5199f685800579a41cc2a964f20a",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x2d1cea8895763fc50c6520069e24fed7850c5199f685800579a41cc2a964f20a"
+    },
+    {
+      "symbol": "SOL",
+      "tx": "0x5ba4d4028cda43f068f771b0af61a1f74966f3a91066947d691a47f91bde3bf9",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x5ba4d4028cda43f068f771b0af61a1f74966f3a91066947d691a47f91bde3bf9"
+    },
+    {
+      "symbol": "AVAX",
+      "tx": "0xd7a1b6d9be0636362f944c3e4d625fe3acbeebf409b30219a00a45ab104fa5fe",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xd7a1b6d9be0636362f944c3e4d625fe3acbeebf409b30219a00a45ab104fa5fe"
+    },
+    {
+      "symbol": "LINK",
+      "tx": "0x41ee8b47d7dedc9e610ba2bee033c064d8b42c146ad391521840da0d6a98a937",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x41ee8b47d7dedc9e610ba2bee033c064d8b42c146ad391521840da0d6a98a937"
+    },
+    {
+      "symbol": "ARB",
+      "tx": "0xcf0ff3bdc37db0d53dc67924bf6fb9f3d20d0eab9477e08f5aae531ce806ca50",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xcf0ff3bdc37db0d53dc67924bf6fb9f3d20d0eab9477e08f5aae531ce806ca50"
+    },
+    {
+      "symbol": "OP",
+      "tx": "0x4594cfa9d5b9b8f7bdb4c1c1de4b36432bba9d2173480bec71f23becda67777d",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x4594cfa9d5b9b8f7bdb4c1c1de4b36432bba9d2173480bec71f23becda67777d"
+    },
+    {
+      "symbol": "NEAR",
+      "tx": "0xf8853782888b388990ef95693062e897bd6b8fa89a472aef01c746e1a0a4ff13",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xf8853782888b388990ef95693062e897bd6b8fa89a472aef01c746e1a0a4ff13"
+    },
+    {
+      "symbol": "SUI",
+      "tx": "0xcd96fcf03b3500d96a2f56326e8ea415c6eea3318aae1391f3f619aeb69956dc",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xcd96fcf03b3500d96a2f56326e8ea415c6eea3318aae1391f3f619aeb69956dc"
+    },
+    {
+      "symbol": "BNB",
+      "tx": "0x7d6d3ec12ea617d995f8d513eb330319e0897ec619a6a7c58804b0cf7388ce46",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x7d6d3ec12ea617d995f8d513eb330319e0897ec619a6a7c58804b0cf7388ce46"
+    }
+  ],
+  "status": "DEPLOYED_SEEDED_AND_ETH_EVALUATED",
+  "governor": "0xebf5789dbb6498ce9de0e1222bae4ad47fd4c486",
   "verified_on_chain": {
     "checked_at": "2026-09-29",
     "chain_id": 61997,
-    "methods": [
-      "evaluate_market_risk",
-      "get_all_markets",
-      "get_governor",
-      "get_history",
-      "get_history_length",
-      "get_market",
-      "register_market",
-      "set_market_active",
-      "set_secondary_telemetry",
-      "toggle_circuit_breaker",
-      "transfer_governor"
+    "governor": "0xebf5789dbb6498ce9de0e1222bae4ad47fd4c486",
+    "method_count": 11,
+    "market_count": 10,
+    "markets": [
+      "ETH",
+      "BTC",
+      "SOL",
+      "AVAX",
+      "LINK",
+      "ARB",
+      "OP",
+      "NEAR",
+      "SUI",
+      "BNB"
     ],
-    "get_history_length": 0,
-    "get_all_markets": [],
-    "note": "Read via scripts/interact_live.py. Method list matches contracts/apex_risk.py (11 methods). No markets are registered yet: run `scripts/interact_live.py --seed` as the governor."
+    "primary_source": "Coinbase Exchange ticker (all ten)",
+    "secondary_source": "Kraken ticker (all ten)",
+    "get_history_length": 1,
+    "evaluated_markets": {
+      "ETH": 1
+    },
+    "note": "Read back over the RPC with both the Python client and genlayer-js. All ten markets carry the catalog's Coinbase primary and Kraken secondary and their seeded postures; only ETH has been evaluated."
   },
-  "deploy_tx": null,
-  "address_format": "0x + 40 hex chars",
-  "explorer_contract_url_template": "https://explorer-studio-next.genlayer.com/address/{address}",
-  "explorer_tx_url_template": "https://explorer-studio-next.genlayer.com/tx/{hash}"
+  "key_handling": "The governor key is a dedicated deployer key held only in the git-ignored .env on the deploying machine. It is not in this repository.",
+  "supersedes": {
+    "contract_address": "0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d",
+    "note": "Earlier instance, governed by a different key; left untouched and no longer referenced by the app."
+  },
+  "evaluations": [
+    {
+      "symbol": "ETH",
+      "attempt": 1,
+      "tx": "0x7424ca71565b628811a4344854fe40346e9bfad1b508247e917fd439750354a0",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x7424ca71565b628811a4344854fe40346e9bfad1b508247e917fd439750354a0",
+      "outcome": "FAILED_NO_STATE_CHANGE",
+      "consensus": "MAJORITY_AGREE on the leader's error (validators re-ran it, hit the same failure, and agreed)",
+      "error": "[TRANSIENT] telemetry unreachable: WEBPAGE_LOAD_FAILED",
+      "cause": "The primary telemetry URL was api.binance.com, which answers HTTP 451 (restricted location) from the Studio Next validators' network. Fixed by moving to Coinbase + Kraken.",
+      "evaluation_count_after": 0
+    },
+    {
+      "symbol": "ETH",
+      "attempt": 2,
+      "tx": "0x95bfa35b36902a894648dde30fbb2620d8ad4fa601d5b21f751310a4fe578b4d",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x95bfa35b36902a894648dde30fbb2620d8ad4fa601d5b21f751310a4fe578b4d",
+      "outcome": "COMMITTED",
+      "consensus": "MAJORITY_AGREE; leader SUCCESS; 3 validators agree, 2 idle; 0 rotations",
+      "evaluated_at": 1790684690,
+      "evaluation_count_after": 1,
+      "committee_rationale": "Consistent price data across sources and moderate volume support maintaining the current risk posture without adjustment.",
+      "prior_posture": {
+        "max_ltv_bps": 8000,
+        "liquidation_threshold_bps": 8500,
+        "borrow_rate_base_bps": 350,
+        "risk_tier": "LOW"
+      },
+      "applied_posture": {
+        "max_ltv_bps": 8000,
+        "liquidation_threshold_bps": 8500,
+        "borrow_rate_base_bps": 350,
+        "risk_tier": "LOW"
+      },
+      "note": "The committee recommended no change, so the velocity limiter had nothing to limit: this run proves scrape -> committee -> consensus -> commit, not the live step limiting."
+    }
+  ],
+  "telemetry_sync": {
+    "reason": "Seeded with api.binance.com URLs, which the validators cannot reach (HTTP 451). Re-pointed with `interact_live.py --sync-telemetry --with-secondary` (primary Coinbase, secondary Kraken). register_market was called with each market's CURRENT posture, so no posture changed.",
+    "markets": {
+      "ETH": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/ETH-USD/ticker",
+          "tx": "0x8203d682a7691e80b0229f1e303e23f3861f03bfdf93573174f99b9c301f275b",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x8203d682a7691e80b0229f1e303e23f3861f03bfdf93573174f99b9c301f275b"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=ETHUSD",
+          "tx": "0xdbf563a98ef92636efda599fdf4f66b900a5ddef89b9b9d4ad874f2ecae40d87",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xdbf563a98ef92636efda599fdf4f66b900a5ddef89b9b9d4ad874f2ecae40d87"
+        }
+      },
+      "BTC": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/BTC-USD/ticker",
+          "tx": "0x238354f482bdb651a217426300b5ec3192026f35e699bcf8720c2ad42b37ec72",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x238354f482bdb651a217426300b5ec3192026f35e699bcf8720c2ad42b37ec72"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=XBTUSD",
+          "tx": "0xfb5dcb9d3a0407199a45f4ff44cdd79cd4be7951ceecd400c2dbaf93d46c6b8e",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xfb5dcb9d3a0407199a45f4ff44cdd79cd4be7951ceecd400c2dbaf93d46c6b8e"
+        }
+      },
+      "SOL": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/SOL-USD/ticker",
+          "tx": "0xa3f86fe458cfec6db064985f8ca0aff5216564bc8755993dbe6307e09e4b7d57",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xa3f86fe458cfec6db064985f8ca0aff5216564bc8755993dbe6307e09e4b7d57"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=SOLUSD",
+          "tx": "0x3739c7ddde8b2c0f58a574014b5dcb27994c88b712fbf97ae38ceaccbee4a6bb",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x3739c7ddde8b2c0f58a574014b5dcb27994c88b712fbf97ae38ceaccbee4a6bb"
+        }
+      },
+      "AVAX": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/AVAX-USD/ticker",
+          "tx": "0xbfa394f496718ab4348a216f155caf8f3cf9c4e9acc8ffcc0e95ea9962609e3c",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xbfa394f496718ab4348a216f155caf8f3cf9c4e9acc8ffcc0e95ea9962609e3c"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=AVAXUSD",
+          "tx": "0x3c6a3fc9353d4f6fe3c571d1f389e0d2bcc8933b11692325e693e7cebc747f4c",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x3c6a3fc9353d4f6fe3c571d1f389e0d2bcc8933b11692325e693e7cebc747f4c"
+        }
+      },
+      "LINK": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/LINK-USD/ticker",
+          "tx": "0x73895123054ef1ef12cddb2a2f22886c18815c2c272a211d4d3aaeafff49cc98",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x73895123054ef1ef12cddb2a2f22886c18815c2c272a211d4d3aaeafff49cc98"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=LINKUSD",
+          "tx": "0xe8b9e9b45d6e0166083b9893684a6b81385953a76906114de8f793d5df88f3ef",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xe8b9e9b45d6e0166083b9893684a6b81385953a76906114de8f793d5df88f3ef"
+        }
+      },
+      "ARB": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/ARB-USD/ticker",
+          "tx": "0xd9d2362f99925bb25362f8c2affe362c0ce643f03b372b5c032eade633f541f3",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xd9d2362f99925bb25362f8c2affe362c0ce643f03b372b5c032eade633f541f3"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=ARBUSD",
+          "tx": "0x125724d96cc1b8e0793fcf6f1f9190c9d52ea83ed6b0d5adf625bcaad7d5d974",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x125724d96cc1b8e0793fcf6f1f9190c9d52ea83ed6b0d5adf625bcaad7d5d974"
+        }
+      },
+      "OP": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/OP-USD/ticker",
+          "tx": "0xd940608d34fa6db6e7725e1492f5a04f46aaacf6c51477be577f507506af84a8",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xd940608d34fa6db6e7725e1492f5a04f46aaacf6c51477be577f507506af84a8"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=OPUSD",
+          "tx": "0x4ac8e1c356990dc0216057af208c934bfe75d0a8512eb3c1380b7939a5f32546",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x4ac8e1c356990dc0216057af208c934bfe75d0a8512eb3c1380b7939a5f32546"
+        }
+      },
+      "NEAR": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/NEAR-USD/ticker",
+          "tx": "0x71dfa83fc36cf154c0f22b29ee37ffdfe3424da07323ddb29dd17bb35fa4614f",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x71dfa83fc36cf154c0f22b29ee37ffdfe3424da07323ddb29dd17bb35fa4614f"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=NEARUSD",
+          "tx": "0xf3e9bc4ba0f432562869ce0a9b26e184e75ab4974bd077db05b5cfae00822320",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xf3e9bc4ba0f432562869ce0a9b26e184e75ab4974bd077db05b5cfae00822320"
+        }
+      },
+      "SUI": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/SUI-USD/ticker",
+          "tx": "0xfc564ae45fd9efd2b24fb0a1b73063f14bc8b724eed3e40f68c8ebc02346b2de",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xfc564ae45fd9efd2b24fb0a1b73063f14bc8b724eed3e40f68c8ebc02346b2de"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=SUIUSD",
+          "tx": "0xa44a000fd500c9ec5d1113d4e18b97e4fd1a64d0e201e7888ea87ef68fcc6965",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0xa44a000fd500c9ec5d1113d4e18b97e4fd1a64d0e201e7888ea87ef68fcc6965"
+        }
+      },
+      "BNB": {
+        "primary": {
+          "url": "https://api.exchange.coinbase.com/products/BNB-USD/ticker",
+          "tx": "0x1e89d0ea9aa02cf3ddcd36283f2248adc30e8d5567db6ad869964f72d07e04ae",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x1e89d0ea9aa02cf3ddcd36283f2248adc30e8d5567db6ad869964f72d07e04ae"
+        },
+        "secondary": {
+          "url": "https://api.kraken.com/0/public/Ticker?pair=BNBUSD",
+          "tx": "0x447ade60de4cf8aa4c4340634ffabf0dbaad2b9d8e1e86f8d6dc560d9fa93ed7",
+          "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x447ade60de4cf8aa4c4340634ffabf0dbaad2b9d8e1e86f8d6dc560d9fa93ed7"
+        }
+      }
+    }
+  },
+  "diagnostics": {
+    "what": "A throwaway probe contract (not part of this repository) fetched each URL with gl.nondet.web.get and web.render inside consensus transactions, so the results describe the validators' network.",
+    "probe_contract": "0x396230ae2886FC28bfe4d9cFc64bbE7Df1c5CCEf",
+    "probe_get_tx": "0xb458f9104adeae3cf140a6d74780b30e5ef9d4e6071552cf8dd103a9edebb04f",
+    "probe_render_tx": "0xf758d076b082f00c10dabf589f2e7bd831040021c3128fe76849380c5bdaee05",
+    "findings": {
+      "example.com": "HTTP 200 (get and render)",
+      "api.binance.com (ticker, depth)": "HTTP 451 'Service unavailable from a restricted location'; render: WEBPAGE_LOAD_FAILED",
+      "www.coingecko.com": "HTTP 403; render: WEBPAGE_LOAD_FAILED",
+      "api.binance.us, api.exchange.coinbase.com, api.kraken.com": "HTTP 200 (get and render)"
+    },
+    "lesson": "web.render loads JSON endpoints fine and reports WEBPAGE_LOAD_FAILED on any error page; views cannot run non-deterministic blocks over gen_call ('leader_fault nondet_output absent'), so such probes must be write transactions."
+  }
 }

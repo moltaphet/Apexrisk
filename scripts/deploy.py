@@ -78,7 +78,10 @@ def main() -> int:
     client = create_client(chain=studio_devnet, endpoint=RPC_URL, account=account)
     print(f"Deployer  {account.address}\nNetwork   Studio Next ({CHAIN_ID}) via {RPC_URL}")
 
-    tx_hash = client.deploy_contract(code=CONTRACT.read_bytes(), args=[])
+    # Studio Next has a fee policy enabled: a transaction with no fee distribution
+    # is reverted on-chain with FeesDistributionMissing, so every write carries the
+    # SDK's estimated distribution and fee deposit (~0.1 GEN).
+    tx_hash = client.deploy_contract(code=CONTRACT.read_bytes(), args=[], fees=client.estimate_transaction_fees())
     print(f"Deploy tx {tx_hash}")
     receipt = client.wait_for_transaction_receipt(transaction_hash=tx_hash, full_transaction=True)
     address = find_address(receipt)
@@ -95,6 +98,7 @@ def main() -> int:
                 function_name="register_market",
                 args=[symbol, seed.telemetry_url, seed.ltv, seed.liq, seed.rate],
                 account=account,
+                fees=client.estimate_transaction_fees(),
             )
             client.wait_for_transaction_receipt(transaction_hash=tx)
             seeded.append({"symbol": symbol, "telemetry_url": seed.telemetry_url, "tx": str(tx)})

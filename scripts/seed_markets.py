@@ -5,49 +5,55 @@ Single source of truth for `deploy.py` and `interact_live.py`. The frontend's
 (tests/direct/test_seed_markets.py) fails if the two drift or if any baseline
 would be clamped by the contract's invariants.
 
-Telemetry: keyless public Binance REST endpoints.
-  * primary   -- 24h ticker: price, 24h change / high / low, volume (a compact
-                 volatility + liquidity read, ~0.5 KB)
-  * secondary -- top-of-book depth (limit=20, ~1.3 KB), an independent second view
-                 of liquidity; registered with `interact_live.py --seed --with-depth`
+Telemetry: two independent exchanges' keyless public ticker JSON, so the
+contract's dual-source cross-check is real.
+  * primary   -- Coinbase Exchange ticker (price, bid/ask, 24h volume; ~0.2 KB)
+  * secondary -- Kraken ticker (ask/bid/last, volume, 24h high/low; ~0.3 KB),
+                 registered with `interact_live.py --seed --with-secondary`
 
-CoinGecko coin pages and its keyless API were the first choice but answer
-HTTP 403 (bot protection) to non-browser clients, so they cannot be relied on for
-unattended validator scraping. Binance may still refuse some regions (HTTP 451);
-in that case the committee gets an error body, returns nothing usable, and the
-evaluation reverts with state untouched.
+Why these and not Binance / CoinGecko: measured from inside Studio Next itself
+(a probe contract run as consensus transactions),
+  api.binance.com    -> HTTP 451 "Service unavailable from a restricted location"
+  www.coingecko.com  -> HTTP 403 (bot protection)
+  Coinbase, Kraken, Binance.US -> HTTP 200, with both web.get and web.render.
+The original catalog used api.binance.com, so every evaluation reverted with
+[TRANSIENT] telemetry unreachable: WEBPAGE_LOAD_FAILED. Reachability is a property
+of the validators' network, not of a developer machine, so re-measure before
+switching sources.
 """
 
 from typing import NamedTuple
 
-BINANCE = "https://api.binance.com/api/v3"
+COINBASE = "https://api.exchange.coinbase.com/products"
+KRAKEN = "https://api.kraken.com/0/public/Ticker"
 
 
 class Seed(NamedTuple):
     name: str
-    pair: str  # Binance spot symbol, e.g. ETHUSDT
+    coinbase: str  # Coinbase product id, e.g. ETH-USD
+    kraken: str  # Kraken pair, e.g. XBTUSD
     ltv: int  # bps
     liq: int  # bps
     rate: int  # bps
 
     @property
     def telemetry_url(self) -> str:
-        return f"{BINANCE}/ticker/24hr?symbol={self.pair}"
+        return f"{COINBASE}/{self.coinbase}/ticker"
 
     @property
-    def depth_url(self) -> str:
-        return f"{BINANCE}/depth?symbol={self.pair}&limit=20"
+    def secondary_url(self) -> str:
+        return f"{KRAKEN}?pair={self.kraken}"
 
 
 SEED_MARKETS: dict[str, Seed] = {
-    "ETH": Seed("Ethereum", "ETHUSDT", 8000, 8500, 350),
-    "BTC": Seed("Bitcoin", "BTCUSDT", 8000, 8500, 300),
-    "SOL": Seed("Solana", "SOLUSDT", 7000, 7600, 450),
-    "AVAX": Seed("Avalanche", "AVAXUSDT", 6500, 7200, 500),
-    "LINK": Seed("Chainlink", "LINKUSDT", 7000, 7500, 400),
-    "ARB": Seed("Arbitrum", "ARBUSDT", 6000, 6800, 550),
-    "OP": Seed("Optimism", "OPUSDT", 6000, 6800, 550),
-    "NEAR": Seed("NEAR Protocol", "NEARUSDT", 6000, 6700, 600),
-    "SUI": Seed("Sui", "SUIUSDT", 5500, 6400, 650),
-    "BNB": Seed("BNB", "BNBUSDT", 7500, 8000, 400),
+    "ETH": Seed("Ethereum", "ETH-USD", "ETHUSD", 8000, 8500, 350),
+    "BTC": Seed("Bitcoin", "BTC-USD", "XBTUSD", 8000, 8500, 300),
+    "SOL": Seed("Solana", "SOL-USD", "SOLUSD", 7000, 7600, 450),
+    "AVAX": Seed("Avalanche", "AVAX-USD", "AVAXUSD", 6500, 7200, 500),
+    "LINK": Seed("Chainlink", "LINK-USD", "LINKUSD", 7000, 7500, 400),
+    "ARB": Seed("Arbitrum", "ARB-USD", "ARBUSD", 6000, 6800, 550),
+    "OP": Seed("Optimism", "OP-USD", "OPUSD", 6000, 6800, 550),
+    "NEAR": Seed("NEAR Protocol", "NEAR-USD", "NEARUSD", 6000, 6700, 600),
+    "SUI": Seed("Sui", "SUI-USD", "SUIUSD", 5500, 6400, 650),
+    "BNB": Seed("BNB", "BNB-USD", "BNBUSD", 7500, 8000, 400),
 }

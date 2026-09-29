@@ -26,7 +26,7 @@ export const WALLET_CHAIN_PARAMS = {
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // Studio Next deployment. `scripts/deploy.py` rewrites this line after a deploy.
-export const STUDIO_NEXT_CONTRACT_ADDRESS = "0x4a6ef68F2C87319D32Ff37858D40eF28dAc32E3d";
+export const STUDIO_NEXT_CONTRACT_ADDRESS = "0x6cc9f05CF5561D35d26bccC174bAcF44583bD4A7";
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
@@ -47,7 +47,7 @@ export const DOCS_URL = "https://docs.genlayer.com";
 // Set to the public repository URL once published; the footer shows a disabled label while empty.
 export const GITHUB_URL = "";
 export const APP_VERSION = "v1.0-alpha";
-export const TESTS_PASSING = 234;
+export const TESTS_PASSING = 258;
 
 // Mirrors of the contract's velocity limits (contracts/apex_risk.py).
 export const EVAL_COOLDOWN_SECS = 1800;
