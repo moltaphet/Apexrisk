@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { ChevronDown, LogOut, Menu, ShieldCheck, Wallet, X } from "lucide-react";
+import { chainLabel, isStudioNext } from "../chain";
 import { APP_VERSION, CHAIN_ID, CHAIN_NAME, CONTRACT_ADDRESS, IS_DEPLOYED, explorerAddressUrl, EXPLORER_URL } from "../config";
 
 // The nav's Explorer link goes straight to the contract once one is configured.
@@ -10,6 +11,8 @@ interface Props {
   guestLocked: boolean;
   busy: boolean;
   account: string | null;
+  /** The wallet's current chain (null = unknown). Shown so a wrong network is never hidden. */
+  chainId: number | null;
   walletAvailable: boolean;
   onToggleGuest: (guest: boolean) => void;
   onConnect: (e: ReactMouseEvent<HTMLButtonElement>) => void;
@@ -121,7 +124,7 @@ export function Navbar(p: Props) {
                   aria-label={`Wallet ${p.account}`}
                   className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-apex/40 bg-panel px-3.5 py-2 font-mono text-xs font-semibold hover:border-apex"
                 >
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-apex" />
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${isStudioNext(p.chainId) ? "bg-apex" : "bg-crit"}`} />
                   {short(p.account)}
                   <ChevronDown size={14} className="shrink-0 text-mute" />
                 </button>
@@ -130,9 +133,15 @@ export function Navbar(p: Props) {
                     <div className="whitespace-nowrap text-[10px] uppercase tracking-[0.16em] text-mute">Connected</div>
                     {/* The full address may wrap here: this is a menu, not the header row. */}
                     <div className="mt-1 break-all font-mono text-xs">{p.account}</div>
-                    <div className="mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-apex/30 bg-apex/10 px-2 py-0.5 text-[11px] text-apex">
-                      {CHAIN_NAME} · {CHAIN_ID}
-                    </div>
+                    {isStudioNext(p.chainId) ? (
+                      <div className="mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-apex/30 bg-apex/10 px-2 py-0.5 text-[11px] text-apex">
+                        {CHAIN_NAME} · {CHAIN_ID}
+                      </div>
+                    ) : (
+                      <div className="mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-crit/40 bg-crit/10 px-2 py-0.5 text-[11px] text-crit">
+                        Wrong network: {chainLabel(p.chainId)}
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => {

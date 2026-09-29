@@ -62,7 +62,7 @@
       "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x7d6d3ec12ea617d995f8d513eb330319e0897ec619a6a7c58804b0cf7388ce46"
     }
   ],
-  "status": "DEPLOYED_SEEDED_AND_ETH_EVALUATED",
+  "status": "DEPLOYED_SEEDED_AND_EVALUATED_ETH_SOL_SUI",
   "governor": "0xebf5789dbb6498ce9de0e1222bae4ad47fd4c486",
   "verified_on_chain": {
     "checked_at": "2026-09-29",
@@ -84,12 +84,13 @@
     ],
     "primary_source": "Coinbase Exchange ticker (all ten)",
     "secondary_source": "Kraken ticker (all ten)",
-    "get_history_length": 2,
+    "get_history_length": 3,
     "evaluated_markets": {
       "ETH": 1,
-      "SOL": 1
+      "SOL": 1,
+      "SUI": 1
     },
-    "note": "Read back over the RPC with both the Python client and genlayer-js. All ten markets carry the catalog's Coinbase primary and Kraken secondary and their seeded postures; ETH and SOL have each been evaluated once and both committee answers equalled the current posture, so live velocity-limited stepping is still unobserved."
+    "note": "Read back over the RPC with both the Python client and genlayer-js. All ten markets carry the catalog's Coinbase primary and Kraken secondary. ETH, SOL and SUI have each been evaluated once; only SUI's committee answer moved the posture, and within the step limits, so live velocity-limited stepping is still unobserved."
   },
   "key_handling": "The governor key is a dedicated deployer key held only in the git-ignored .env on the deploying machine. It is not in this repository.",
   "supersedes": {
@@ -162,6 +163,44 @@
       },
       "velocity_limiter_engaged": false,
       "note": "Requested as a velocity-limiter demonstration. It was not one: the committee recommended no change, so target == applied == prior and the limiter had nothing to limit."
+    },
+    {
+      "symbol": "SUI",
+      "attempt": 1,
+      "tx": "0x658556ad05f5baa64bdd6c90e6f99c4f0ee6ef0d6edbc3e619001c7b0a10c356",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x658556ad05f5baa64bdd6c90e6f99c4f0ee6ef0d6edbc3e619001c7b0a10c356",
+      "outcome": "COMMITTED",
+      "sent_via": "genlayer-js with the frontend's fee logic (estimateTransactionFees + fees on writeContract), signed by the local deployer key. Not sent from a browser wallet.",
+      "consensus": "MAJORITY_AGREE; 3 validators agree, 2 idle; 0 rotations",
+      "fee_value_wei": "100000000000010352",
+      "evaluated_at": 1790689565,
+      "evaluation_count_after": 1,
+      "committee_rationale": "SUI shows tight cross-venue pricing and solid spot volume with only modest intraday weakness versus the open, supporting a slightly conservative posture versus current settings while maintaining a 900 bps liquidation buffer.",
+      "prior_posture": {
+        "borrow_rate_base_bps": 650,
+        "liquidation_threshold_bps": 6400,
+        "max_ltv_bps": 5500,
+        "risk_tier": "MODERATE"
+      },
+      "committee_posture": {
+        "borrow_rate_base_bps": 700,
+        "liquidation_threshold_bps": 6300,
+        "max_ltv_bps": 5400
+      },
+      "target_posture": {
+        "borrow_rate_base_bps": 700,
+        "liquidation_threshold_bps": 6300,
+        "max_ltv_bps": 5400,
+        "risk_tier": "HIGH"
+      },
+      "applied_posture": {
+        "borrow_rate_base_bps": 700,
+        "liquidation_threshold_bps": 6300,
+        "max_ltv_bps": 5400,
+        "risk_tier": "HIGH"
+      },
+      "velocity_limiter_engaged": false,
+      "note": "The first evaluation where the committee MOVED a posture (LTV 55% -> 54%, tier MODERATE -> HIGH). The move was inside the step limits (-100/-100/+50 bps), so target == applied and the limiter did not engage."
     }
   ],
   "telemetry_sync": {
@@ -301,5 +340,17 @@
       "api.binance.us, api.exchange.coinbase.com, api.kraken.com": "HTTP 200 (get and render)"
     },
     "lesson": "web.render loads JSON endpoints fine and reports WEBPAGE_LOAD_FAILED on any error page; views cannot run non-deterministic blocks over gen_call ('leader_fault nondet_output absent'), so such probes must be write transactions."
+  },
+  "telemetry_validation": {
+    "checked": "all 10 Coinbase primary + all 10 Kraken secondary URLs, from inside Studio Next, via the probe contract, with both web.get and web.render",
+    "probe_get_tx": "0x14bc0814075f3a216bf3ca4585824e62532f27000768ebfc8bd4df9f47ab2c3c",
+    "probe_render_tx": "0x4bdddabd653e4763ce1a31a709fa441513246bb64c8b053867ae986a4da83f8a",
+    "result": "20/20 HTTP 200 and non-empty via both primitives; Coinbase bodies contain price/ask, Kraken bodies contain \"error\":[] and a result. SUI, NEAR and BNB included.",
+    "conclusion": "The telemetry symbols are correct for every asset. A frontend evaluation failing before this fix failed on FeesDistributionMissing, not on telemetry."
+  },
+  "frontend_fees": {
+    "problem": "Studio Next reverts any write without a fee distribution (FeesDistributionMissing). The frontend sent evaluate_market_risk with no fees.",
+    "fix": "quoteFees() = client.estimateTransactionFees(); writeContract({..., fees: {distribution, feeValue}}). The ~0.1 GEN deposit travels as the transaction value, so the wallet shows it for approval.",
+    "verified_with": "a scripted fake wallet (eth_sendTransaction value = 0.100000 GEN to the consensus contract), a headless-browser run of the wrong-network flow, and the real SUI evaluation above (on-chain fee_value 100000000000010352 wei)."
   }
 }

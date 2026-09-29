@@ -159,6 +159,13 @@ export function ConsensusRunner({ symbol, guest, run, busy, canRunLive, liveBloc
 
       {blocked && liveBlockReason && <p className="mt-3 text-xs text-warn">{liveBlockReason}</p>}
 
+      {!guest && !blocked && (
+        <p className="mt-3 text-[11px] leading-relaxed text-mute">
+          A live evaluation is an on-chain transaction. Studio Next charges a validator fee, so your wallet will ask you to approve a
+          network fee deposit of about 0.1 GEN along with it.
+        </p>
+      )}
+
       {guest && (
         <div className="mt-4 rounded-md border border-warn/30 bg-warn/5 p-3 text-xs">
           <div className="font-semibold text-warn">Guest mode · pre-populated telemetry · SIMULATED</div>

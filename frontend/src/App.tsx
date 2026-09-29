@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState, type MouseEvent } from "react";
-import { connectWallet, fetchMarkets, hasWallet, runEvaluation } from "./chain";
+import { connectWallet, fetchMarkets, hasWallet, isStudioNext, runEvaluation, switchToStudioNext, watchWallet } from "./chain";
 import { ConsensusRunner } from "./components/ConsensusRunner";
 import { RiskTerminal } from "./components/RiskTerminal";
 import { AboutModal } from "./components/AboutModal";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
+import { NetworkGuard } from "./components/NetworkGuard";
 import { MARKET_CATALOG } from "./catalog";
 import { IS_DEPLOYED } from "./config";
 import { GUEST_MARKETS, runGuestEvaluation } from "./guest";
@@ -47,6 +48,8 @@ export default function App() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string>(MARKET_CATALOG[0].symbol);
   const [account, setAccount] = useState<string | null>(null);
+  const [chainId, setChainId] = useState<number | null>(null);
+  const [switching, setSwitching] = useState(false);
   const [run, setRun] = useState<RunState | null>(null);
   const [busy, setBusy] = useState(false);
   const [walletError, setWalletError] = useState<string | null>(null);
@@ -92,11 +95,41 @@ export default function App() {
   const connect = async (e: MouseEvent<HTMLButtonElement>) => {
     setWalletError(null);
     try {
-      setAccount(await connectWallet(e.nativeEvent.isTrusted));
+      const w = await connectWallet(e.nativeEvent.isTrusted);
+      setAccount(w.account);
+      setChainId(w.chainId);
     } catch (e) {
       setWalletError(e instanceof Error ? e.message : String(e));
     }
   };
+
+  const disconnect = () => {
+    setAccount(null);
+    setChainId(null);
+  };
+
+  // The "Switch to Studio Next" button: the only place a network prompt is raised after connecting.
+  const switchNetwork = async (e: MouseEvent<HTMLButtonElement>) => {
+    setWalletError(null);
+    setSwitching(true);
+    try {
+      setChainId(await switchToStudioNext(e.nativeEvent.isTrusted));
+    } catch (err) {
+      setWalletError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSwitching(false);
+    }
+  };
+
+  // Follow network / account changes made inside the wallet. This is passive (it
+  // prompts nothing) and starts only after the user has connected.
+  useEffect(() => {
+    if (!account) return;
+    return watchWallet({
+      onChainChanged: setChainId,
+      onAccountsChanged: (accounts) => (accounts.length ? setAccount(accounts[0]) : disconnect()),
+    });
+  }, [account]);
 
   const onRun = async () => {
     const mode = guest ? "guest" : "onchain";
@@ -127,11 +160,15 @@ export default function App() {
     }
   };
 
+  const wrongNetwork = !guest && !!account && !isStudioNext(chainId);
+
   const liveBlock = !IS_DEPLOYED
     ? "No contract is deployed on Studio Next yet. Live mode unlocks once scripts/deploy.py has run; Guest mode works now."
     : !account
       ? "Connect a wallet on Studio Next to submit a live evaluation."
-      : null;
+      : wrongNetwork
+        ? "Your wallet is on the wrong network. Use “Switch to Studio Next” above to submit a live evaluation."
+        : null;
 
   return (
     <div className="min-h-screen">
@@ -140,12 +177,14 @@ export default function App() {
         guestLocked={!IS_DEPLOYED}
         busy={busy}
         account={account}
+        chainId={chainId}
         walletAvailable={hasWallet()}
         onToggleGuest={toggleGuest}
         onConnect={connect}
-        onDisconnect={() => setAccount(null)}
+        onDisconnect={disconnect}
         onAbout={() => setAboutOpen(true)}
       />
+      {wrongNetwork && <NetworkGuard chainId={chainId} switching={switching} onSwitch={switchNetwork} />}
 
       <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6">
         <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-apex/10 via-white/[0.02] to-transparent p-6 sm:p-8">
@@ -185,7 +224,7 @@ export default function App() {
             guest={guest}
             run={run}
             busy={busy}
-            canRunLive={IS_DEPLOYED && !!account}
+            canRunLive={IS_DEPLOYED && !!account && !wrongNetwork}
             liveBlockReason={liveBlock}
             onRun={onRun}
           />
