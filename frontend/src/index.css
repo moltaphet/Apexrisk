@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-ink: #07090d;
+  --color-panel: #0d1117;
+  --color-panel-2: #131923;
+  --color-line: #1e2733;
+  --color-mute: #7d8896;
+  --color-apex: #34d399;
+  --color-warn: #fbbf24;
+  --color-hot: #fb923c;
+  --color-crit: #f87171;
+}
+
+html, body, #root { min-height: 100%; }
+body {
+  background: var(--color-ink);
+  color: #e6ebf2;
+  font-family: var(--font-mono);
+  background-image:
+    radial-gradient(60rem 30rem at 85% -10%, rgba(52, 211, 153, 0.07), transparent 60%),
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: auto, 44px 44px, 44px 44px;
+}
+.font-display { font-family: var(--font-display); }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,.5);} 100% { box-shadow: 0 0 0 10px rgba(52,211,153,0);} }
+.pulse-ring { animation: pulse-ring 1.4s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .pulse-ring { animation: none; } }
