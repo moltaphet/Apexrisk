@@ -84,11 +84,12 @@
     ],
     "primary_source": "Coinbase Exchange ticker (all ten)",
     "secondary_source": "Kraken ticker (all ten)",
-    "get_history_length": 1,
+    "get_history_length": 2,
     "evaluated_markets": {
-      "ETH": 1
+      "ETH": 1,
+      "SOL": 1
     },
-    "note": "Read back over the RPC with both the Python client and genlayer-js. All ten markets carry the catalog's Coinbase primary and Kraken secondary and their seeded postures; only ETH has been evaluated."
+    "note": "Read back over the RPC with both the Python client and genlayer-js. All ten markets carry the catalog's Coinbase primary and Kraken secondary and their seeded postures; ETH and SOL have each been evaluated once and both committee answers equalled the current posture, so live velocity-limited stepping is still unobserved."
   },
   "key_handling": "The governor key is a dedicated deployer key held only in the git-ignored .env on the deploying machine. It is not in this repository.",
   "supersedes": {
@@ -130,6 +131,37 @@
         "risk_tier": "LOW"
       },
       "note": "The committee recommended no change, so the velocity limiter had nothing to limit: this run proves scrape -> committee -> consensus -> commit, not the live step limiting."
+    },
+    {
+      "symbol": "SOL",
+      "attempt": 1,
+      "tx": "0x2829729f19493e5b84e2c2f19a51b65da921bee97bce3ee44934abbb7cdf6ca2",
+      "explorer_tx_url": "https://explorer-studio-next.genlayer.com/tx/0x2829729f19493e5b84e2c2f19a51b65da921bee97bce3ee44934abbb7cdf6ca2",
+      "outcome": "COMMITTED",
+      "consensus": "MAJORITY_AGREE; 3 validators agree, 2 idle; 0 rotations",
+      "evaluated_at": 1790686228,
+      "evaluation_count_after": 1,
+      "committee_rationale": "Stable price action and consistent liquidity across sources justify maintaining current risk parameters without adjustment.",
+      "prior_posture": {
+        "max_ltv_bps": 7000,
+        "liquidation_threshold_bps": 7600,
+        "borrow_rate_base_bps": 450,
+        "risk_tier": "MODERATE"
+      },
+      "target_posture": {
+        "max_ltv_bps": 7000,
+        "liquidation_threshold_bps": 7600,
+        "borrow_rate_base_bps": 450,
+        "risk_tier": "MODERATE"
+      },
+      "applied_posture": {
+        "max_ltv_bps": 7000,
+        "liquidation_threshold_bps": 7600,
+        "borrow_rate_base_bps": 450,
+        "risk_tier": "MODERATE"
+      },
+      "velocity_limiter_engaged": false,
+      "note": "Requested as a velocity-limiter demonstration. It was not one: the committee recommended no change, so target == applied == prior and the limiter had nothing to limit."
     }
   ],
   "telemetry_sync": {
