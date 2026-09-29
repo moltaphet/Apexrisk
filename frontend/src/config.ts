@@ -37,4 +37,4 @@ export const DOCS_URL = "https://docs.genlayer.com";
 // Set to the public repository URL once published; the footer shows a disabled label while empty.
 export const GITHUB_URL = "";
 export const APP_VERSION = "v1.0-alpha";
-export const TESTS_PASSING = 51;
+export const TESTS_PASSING = 80;

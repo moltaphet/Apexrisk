@@ -6,7 +6,7 @@
 
 [![Network](https://img.shields.io/badge/GenLayer-Studio%20Next%20(Chain%20ID%3A%2061997)-34d399?style=flat-square)](https://explorer-studio-next.genlayer.com)
 [![Contract](https://img.shields.io/badge/Contract-Python%20GenVM%20Intelligent%20Contract-3776ab?style=flat-square&logo=python&logoColor=white)](contracts/apex_risk.py)
-[![Tests](https://img.shields.io/badge/Pytest-51%2F51%20Unit%20Tests%20Passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](tests/direct)
+[![Tests](https://img.shields.io/badge/Pytest-80%2F80%20Unit%20Tests%20Passing-22c55e?style=flat-square&logo=pytest&logoColor=white)](tests/direct)
 [![Frontend](https://img.shields.io/badge/Frontend-React%20%2F%20Vite%20%2F%20Tailwind%20CSS-61dafb?style=flat-square&logo=react&logoColor=black)](frontend)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](#license)
 
@@ -55,7 +55,7 @@ A conventional EVM contract cannot do this: it cannot open a web page, cannot re
 Two honest validators reading the same page will not produce byte-identical LLM output, so `strict_eq` is unusable. ApexRisk uses a **custom validator function**:
 
 - The **leader** scrapes the telemetry and obtains a committee posture.
-- Each **validator independently re-scrapes and re-polls its own committee**, then ratifies *only if* the risk tier is identical **and** each of LTV, liquidation threshold and borrow rate is within **±750 bps** of the leader's.
+- Each **validator independently re-scrapes and re-polls its own committee**, then ratifies *only if* each of LTV, liquidation threshold and borrow rate is within **±750 bps** of the leader's. Only numbers gate consensus: the risk tier is a subjective label validators could disagree on, so it is not compared (or even requested) — it is derived deterministically from the clamped LTV after consensus.
 - A leader failure is reconciled by error class: both sides transient (telemetry unreachable) agree; deterministic business errors must match exactly; malformed LLM output never agrees, which forces a leader rotation instead of locking bad state.
 
 ### Pipeline
@@ -65,7 +65,7 @@ flowchart TD
     A["Off-chain telemetry<br/>public market pages: orderbook depth, volatility, funding"]
     B["Leader + validators each scrape<br/>gl.nondet.web.render(mode='text')"]
     C["LLM risk committee<br/>gl.nondet.exec_prompt(...) → JSON posture"]
-    D{"Validator consensus<br/>gl.vm.run_nondet<br/>same tier AND every bps figure within ±750"}
+    D{"Validator consensus<br/>gl.vm.run_nondet<br/>every bps figure within ±750"}
     E["On-chain safety clamps & invariants<br/>pure deterministic code, applied AFTER consensus"]
     F["State mutation<br/>ApexRisk matrix: LTV · Liq threshold · Base borrow rate · Tier<br/>+ append to risk_history"]
     R["Rotate leader / revert<br/>no state change"]
@@ -81,7 +81,7 @@ flowchart TD
             ▼  gl.nondet.web.render(mode="text")
  [ Multi-Validator LLM Consensus Committee ]  every validator re-scrapes + re-polls
             │
-            ▼  gl.nondet.exec_prompt(...)  →  gl.vm.run_nondet (tier match + ±750 bps)
+            ▼  gl.nondet.exec_prompt(...)  →  gl.vm.run_nondet (±750 bps)
  [ On-Chain Mathematical Safety Clamps & Invariants ]  final authority, runs after consensus
             │
             ▼  state mutation
@@ -103,7 +103,7 @@ Enforced in pure Python (`_apply_invariants`) on **every** committed posture, in
 | **Max LTV** | Clamped to a fixed band | **2000 – 8500 bps** (20.00% – 85.00%) |
 | **Liquidation threshold** | At least **+300 bps above LTV**, and capped | **LTV + 300 → 9800 bps** (≤ 98.00%) |
 | **Base borrow rate** | Clamped to a fixed band | **100 – 2500 bps** (1.00% – 25.00%) |
-| **Risk tier** | Must be one of the four tiers; anything else falls back to `MODERATE` | `LOW`, `MODERATE`, `HIGH`, `CRITICAL` |
+| **Risk tier** | **Derived from the clamped LTV**, never taken from the LLM | LTV ≥ 7500 → `LOW`; ≥ 5500 → `MODERATE`; ≥ 3500 → `HIGH`; otherwise `CRITICAL` |
 | **Ceiling collision** | If the 9800 cap would break the 300 bps buffer, LTV is pulled down instead | buffer is never violated |
 | **Emergency circuit breaker** | Governor-controlled. While tripped, `evaluate_market_risk` reverts and the market's parameters are frozen at their last ratified values | per market |
 
@@ -126,7 +126,7 @@ Additional guarantees:
 | Field | Type | Meaning |
 |---|---|---|
 | `governor` | `Address` | Admin; set to the deployer |
-| `markets` | `TreeMap[str, Market]` | Per-symbol profile: `active`, `telemetry_url`, `max_ltv_bps`, `liquidation_threshold_bps`, `borrow_rate_base_bps`, `risk_tier`, `circuit_breaker`, `evaluation_count`, `last_evaluated_at`, `last_rationale` |
+| `markets` | `TreeMap[str, Market]` | Per-symbol profile: `active`, `telemetry_url`, `max_ltv_bps`, `liquidation_threshold_bps`, `borrow_rate_base_bps`, `risk_tier`, `circuit_breaker`, `evaluation_count`, `last_rationale` (no wall-clock is stored; `evaluation_count` is the monotonic sequence) |
 | `symbols` | `DynArray[str]` | Registration order, for enumeration |
 | `risk_history` | `DynArray[str]` | Append-only JSON records of every evaluation |
 
@@ -155,16 +155,18 @@ Additional guarantees:
 
 ## 5. Verified test suite
 
-**51 tests, 51 passing**, in `tests/direct/`. They run in-memory on the GenVM test harness (no network), with the telemetry page and committee answers mocked.
+**80 tests, 80 passing**, in `tests/direct/`. They run in-memory on the GenVM test harness (no network), with the telemetry page and committee answers mocked.
 
 | Area | What is proven |
 |---|---|
-| **Registration & access control** | Profile stored correctly; governor is the deployer; symbol normalisation and ordering; re-registration updates without duplicating; non-governor is rejected; bad symbols and unsafe URLs (http, IP literal, localhost, `.internal`, `nip.io`, empty) are rejected. |
+| **Initialisation & registration** | A fresh deploy is empty and governed by the deployer, and the first write works; profile stored correctly; symbol normalisation and ordering; re-registration overwrites (including the derived tier) without duplicating and re-activates the market; bad symbols and unsafe URLs (http, IP literal, localhost, `.internal`, `nip.io`, empty) are rejected. |
+| **Governor authorization** | `register_market`, `toggle_circuit_breaker` and `set_market_active` revert with exactly `[EXPECTED] governor only` for a non-governor and leave state unchanged; `evaluate_market_risk` is open to any caller. |
 | **Boundary & clamp tests** | Nine parametrised registration cases at and beyond every bound (LTV floor/ceiling, liquidation buffer and 9800 cap, rate floor/ceiling); an exhaustive sweep asserting the invariants hold for every combination of extreme inputs. |
-| **Circuit breaker & pause** | Toggle round-trip; governor-only; unknown market; a tripped breaker blocks evaluation with no state or history change; resetting re-enables it; inactive markets are blocked. |
-| **Evaluation & invariants** | Committee posture is committed; extreme committee output (LTV 9900, rate 99999) is clamped; liquidation buffer enforced; low-side clamps; invalid tier → `MODERATE`; all four tiers accepted (case-insensitive); fractional and percent figures coerced. |
-| **History & state persistence** | Records hold prior / committee / applied postures; history is per-market and newest-first; `evaluation_count` increments. |
-| **Validator JSON parsing & sanitization** | Prose-wrapped JSON parsed; malformed output and missing numeric fields revert with state untouched; unreachable telemetry reverts with state untouched; a hostile page attempting delimiter forgery and instruction injection still cannot exceed the clamps. |
+| **Circuit breaker & pause** | Toggle round-trip; unknown market; a tripped breaker blocks evaluation with no state or history change and is per-market; resetting re-enables it; the active/inactive toggle round-trips and blocks evaluation when off; toggles persist across calls. |
+| **Deterministic tier** | Every tier boundary (8500/7500/7499/5500/5499/3500/3499/2000) at both registration and evaluation; the tier follows the *clamped* LTV; a committee-supplied tier (any value, or none) is ignored. |
+| **Evaluation & invariants** | Committee posture is committed; super-high output (LTV 9900, rate 99999) and sub-20% LTV are clamped; tight liquidation margins widen to +300 bps; the 9800 cap holds; fractional and percent figures coerced. |
+| **Evaluation count & history** | `evaluation_count` is monotonic and per-market; records hold prior / committee / applied postures and no timestamp; history is per-market and newest-first; `get_history` is bounded to 50 (55 evaluations → 50 returned, 55 stored); `get_all_markets` preserves registration order. |
+| **Validator JSON parsing & sanitization** | Prose-wrapped and markdown-fenced (```` ```json ````) JSON parsed; malformed output and missing numeric fields revert with state untouched; unreachable telemetry reverts with state untouched; a hostile page attempting delimiter forgery and instruction injection still cannot exceed the clamps. |
 
 Reproduce:
 
@@ -174,7 +176,7 @@ Reproduce:
 
 (`pytest` on its own also works: `pyproject.toml` points it at `tests/direct`.)
 
-> **What direct mode does not exercise.** The direct harness runs the leader path; the validator comparison function (`validator_fn`) is **not** executed there. Validator agreement is meant to be covered by integration tests against a live network (`gltest`), which require a deployed contract and are not part of the 51.
+> **What direct mode does not exercise.** The direct harness runs the leader path; the validator comparison function (`validator_fn`) is **not** executed there. Validator agreement is meant to be covered by integration tests against a live network (`gltest`), which require a deployed contract and are not part of the 80.
 
 ---
 
@@ -195,7 +197,7 @@ Reproduce:
 
 ```
 contracts/apex_risk.py     GenVM intelligent contract
-tests/direct/              51 in-memory pytest tests
+tests/direct/              80 in-memory pytest tests
 scripts/deploy.py          deploy + seed ETH/BTC/SOL
 deployments/               deployment artifact (studio-next.json)
 frontend/                  React + Vite + Tailwind risk terminal
@@ -208,7 +210,7 @@ frontend/                  React + Vite + Tailwind risk terminal
 uv venv --python 3.12
 uv pip install --prerelease=allow -r requirements.txt
 
-# 2. Lint the contract and run the 51 unit tests
+# 2. Lint the contract and run the 80 unit tests
 genvm-lint check contracts/apex_risk.py
 .venv/bin/python -m pytest tests/direct/ -v
 
@@ -245,7 +247,7 @@ The script deploys the contract, registers ETH / BTC / SOL, writes `deployments/
 ## 9. Status & honest limitations
 
 - **Not yet deployed.** No live Studio Next address exists yet, so `deployments/studio-next.json` holds a zero-address placeholder and the frontend runs in Guest mode until `scripts/deploy.py` has been run. Nothing in this README claims a live on-chain deployment.
-- **Validator logic is untested here.** The 51 tests validate contract logic, clamps and parsing; the multi-validator agreement path needs live-network integration tests.
+- **Validator logic is untested here.** The 80 tests validate contract logic, clamps and parsing; the multi-validator agreement path needs live-network integration tests.
 - **Telemetry sources are seed values.** The deploy script seeds public CoinGecko market pages so the pipeline can run keyless. Sources with true orderbook depth, implied volatility and funding (exchange or derivatives-analytics pages) can be registered per market through `register_market`; page structure and rate limits are the operator's responsibility.
 - **Experimental software.** ApexRisk is a research prototype on a test network. It is a parameter engine, not a lending pool, holds no user funds, and is not financial advice. It has not been audited.
 
